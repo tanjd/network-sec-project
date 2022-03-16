@@ -1,12 +1,12 @@
 import socket
 import threading
 
-HEADER = 60 ##20 bytes for header, 1 byte of data (min)
+HEADER = 60  ##20 bytes for header, 1 byte of data (min)
 PORT = 5050
 SERVER = socket.gethostbyname(socket.gethostname())
 print(type(SERVER))
-ADDR = (SERVER, PORT)
-FORMAT = 'utf-8'
+ADDR = ("localhost", PORT)
+FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
 
 R1 = "0x11"
@@ -16,6 +16,7 @@ R2_ARP = {"N2": "0x2A"}, {"N3": "0x2B"}
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
+
 
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
@@ -34,6 +35,7 @@ def handle_client(conn, addr):
             conn.send("Msg received".encode(FORMAT))
 
     conn.close()
+
 
 def start():
     server.listen()

@@ -62,12 +62,12 @@ class Packet:
     def print_packet_integrity_status(self, node_mac, node_ip):
         print(
             "\nPacket integrity:"
-            "\ndestination MAC address matches client 1 MAC address: {mac}".format(
+            "\ndestination MAC address matches own MAC address: {mac}".format(
                 mac=(node_mac == self.destination_mac)
             )
         )
         print(
-            "\ndestination IP address matches client 1 IP address: {mac}".format(
+            "\ndestination IP address matches own IP address: {mac}".format(
                 mac=(node_ip == self.destination_ip)
             )
         )

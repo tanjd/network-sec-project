@@ -1,5 +1,6 @@
 import socket
 import time
+import threading
 from Packet import Packet
 
 router = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,41 +18,78 @@ node1_mac = "N1"
 node2_ip = "0x2A"
 node2_mac = "N2"
 
-router_send.listen(4)
-node1 = None
 node2 = None
 
-while node2 is None:
-    client, address = router_send.accept()
-
-    if node2 is None:
-        node2 = client
-        print("node 2 is online")
-
-arp_table_socket = {node1_ip: node1, node2_ip: node2}
 arp_table_mac = {
     node1_ip: node1_mac,
     node2_ip: node2_mac,
 }
-print(arp_table_mac)
 
-router.connect(server)
 
-while True:
-    received_message = router.recv(1024)
-    received_packet_header = received_message.decode("utf-8")
-    if received_packet_header != "":
+def handle_server():
+    router.connect(server)
+    print("[LISTENING] Node 2 is connected to node 1")
+    arp_table_socket = {node2_ip: node2}
+    print(arp_table_socket)
+    while True:
+        received_message = router.recv(1024)
+        received_packet_header = received_message.decode("utf-8")
+        if received_packet_header != "":
 
-        received_packet = Packet(received_packet_header)
+            received_packet = Packet(received_packet_header)
 
-        print("\nThe packed received:")
-        received_packet.print_packet_information()
+            print("\nThe packed received:")
+            received_packet.print_packet_information()
 
-        packet_header = received_packet.create_forward_packet(
-            router_mac, arp_table_mac[received_packet.destination_ip]
-        )
+            packet_header = received_packet.create_forward_packet(
+                router_mac, arp_table_mac[received_packet.destination_ip]
+            )
 
-        destination_socket = arp_table_socket[received_packet.destination_ip]
+            destination_socket = arp_table_socket[received_packet.destination_ip]
+            destination_socket.send(bytes(packet_header, "utf-8"))
 
-        destination_socket.send(bytes(packet_header, "utf-8"))
-        time.sleep(2)
+            time.sleep(2)
+
+
+def send_to_server(packet_header):
+    router.send(bytes(packet_header, "utf-8"))
+
+
+def handle_client(conn, addr):
+    global node2
+    print(f"[NEW CONNECTION] {addr} connected.")
+    while node2 is None:
+        node2 = conn
+        print("node 2 is online")
+    connected = True
+    while connected:
+        received_message = conn.recv(1024)
+        received_packet_header = received_message.decode("utf-8")
+        if received_packet_header:
+            received_packet = Packet(received_packet_header)
+            print("\nThe packed received:")
+            received_packet.print_packet_information()
+
+            packet_header = received_packet.create_forward_packet(
+                router_mac, arp_table_mac[received_packet.destination_ip]
+            )
+            router.send(bytes(packet_header, "utf-8"))
+    conn.close()
+
+
+def start():
+    router_send.listen()
+    print("[LISTENING] router is listening")
+
+    while (threading.activeCount() - 1) < 1:
+        conn, addr = router_send.accept()
+        thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.start()
+
+    thread = threading.Thread(target=handle_server)
+    thread.start()
+    print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+
+
+print("[STARTING] router is starting...")
+start()
