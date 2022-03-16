@@ -4,13 +4,13 @@ import threading
 from Packet import Packet
 
 router = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-router.bind(("localhost", 8100))
+router.bind(("localhost", 8100))  # R1
 
 router_send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-router_send.bind(("localhost", 8200))
+router_send.bind(("localhost", 8200))  # R2
 
-router_mac = "R1"
-
+router1_mac = "R1"
+router2_mac = "R2"
 server = ("localhost", 8000)
 
 node1_ip = "0x1A"
@@ -40,6 +40,12 @@ def handle_server():
 
             print("\nThe packed received:")
             received_packet.print_packet_information()
+
+            # find router_mac
+            if received_packet.destination_mac == router1_mac:
+                router_mac = router2_mac
+            else:
+                router_mac = router1_mac
 
             packet_header = received_packet.create_forward_packet(
                 router_mac, arp_table_mac[received_packet.destination_ip]
@@ -71,7 +77,7 @@ def handle_client(conn, addr):
             received_packet.print_packet_information()
 
             packet_header = received_packet.create_forward_packet(
-                router_mac, arp_table_mac[received_packet.destination_ip]
+                router1_mac, arp_table_mac[received_packet.destination_ip]
             )
             router.send(bytes(packet_header, "utf-8"))
     conn.close()
@@ -79,7 +85,7 @@ def handle_client(conn, addr):
 
 def start():
     router_send.listen()
-    print("[LISTENING] router is listening")
+    print("[LISTENING] r2 is listening")
 
     while (threading.activeCount() - 1) < 1:
         conn, addr = router_send.accept()

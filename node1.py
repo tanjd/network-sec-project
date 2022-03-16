@@ -5,18 +5,10 @@ from utility import print_node_information
 
 node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 node.bind(("localhost", 8000))
-node.listen(2)
+# node.listen(2)
 node_ip = "0x1A"
 node_mac = "N1"
 router_mac = "R1"
-
-# what do you want to do?
-# if 2
-# disconnect
-# who do you want to send it to?
-# what is your message?
-# if 0
-# listen
 
 
 def handle_client(conn, addr):
@@ -31,6 +23,7 @@ def handle_client(conn, addr):
             print("\nThe packed received:")
             received_packet.print_packet_information()
             received_packet.print_packet_integrity_status(node_mac, node_ip)
+
     conn.close()
 
 
@@ -66,6 +59,14 @@ def start():
         router_connection.send(bytes(packet_header, "utf-8"))
 
 
-print("[STARTING] server is starting...")
+print("[STARTING] node 1 is starting...")
 print_node_information(node_ip, node_mac)
 start()
+
+# what do you want to do?
+# if 2
+# disconnect
+# who do you want to send it to?
+# what is your message?
+# if 0
+# listen
