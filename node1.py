@@ -1,7 +1,7 @@
 import socket
 import threading
 from Packet import Packet
-from utility import print_node_information
+from utility import print_node_information, start_client_response, start_protocol
 
 node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 node.bind(("localhost", 8000))
@@ -20,27 +20,30 @@ def handle_client(conn, addr):
         received_packet_header = received_message.decode("utf-8")
         if received_packet_header:
             received_packet = Packet(received_packet_header)
-            print("\nThe packet received:")
+            print("\nRECEIVED PACKET FROM ", received_packet.source_mac)
             received_packet.print_packet_information()
             received_packet.print_packet_integrity_status(node_mac, node_ip)
+
+            protocol =start_client_response()
+            start_protocol(protocol, received_packet, conn)
 
     conn.close()
 
 
 def start():
     node.listen()
-    print("[LISTENING] Node 1 is listening")
+    print("\n[LISTENING] Node 1 is listening")
     while True:
         router_connection, address = node.accept()
 
         # doesn't start until connected to router
         if router_connection is not None:
-            print("\n" + str(router_connection) + "\n")
+            #print("\n" + str(router_connection) + "\n")
             break
 
     thread = threading.Thread(target=handle_client, args=(router_connection, address))
     thread.start()
-    print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+    print(f"\n[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
     #IP Packet 
     source_ip = node_ip
@@ -60,19 +63,12 @@ def start():
     )
     packet.print_packet_information()
     packet_header = packet.create_packet_header()
-    answer = input("Do you want to send data(y|n): ")
+    answer = input("\nDo you want to send data (y|n): ")
     if answer == "y":
         router_connection.send(bytes(packet_header, "utf-8"))
 
 
-print("[STARTING] node 1 is starting...")
+print("********************************\n[STARTING] node 1 is starting...")
 print_node_information(node_ip, node_mac)
 start()
 
-# what do you want to do?
-# if 2
-# disconnect
-# who do you want to send it to?
-# what is your message?
-# if 0
-# listen

@@ -1,7 +1,7 @@
 import socket
 import time
 from Packet import Packet
-from utility import print_node_information
+from utility import print_node_information, start_client_response, start_protocol
 import threading
 
 node_ip = "0x2A"
@@ -27,22 +27,9 @@ def handle_client():
             destination_ip = received_packet.source_ip
             destination_mac = received_packet.source_mac
 
-            print("Do you want to send back the payload? (y|n):")
-            answer = input()
-            if answer == "y":
-                packet = Packet(
-                    node_mac,
-                    destination_mac,
-                    received_packet.ethernet_data_length,
-                    node_ip,
-                    destination_ip,
-                    received_packet.protocol,
-                    received_packet.ip_data_length,
-                    received_packet.payload,
-                )
-                packet.print_packet_information()
-                packet_header = packet.create_packet_header()
-                node.send(bytes(packet_header, "utf-8"))
+            protocol = start_client_response()
+
+            start_protocol(protocol, received_packet, node)
 
 
 def start():
