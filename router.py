@@ -28,9 +28,9 @@ arp_table_mac = {
 
 def handle_server():
     router.connect(server)
-    #print("[LISTENING] Node 2 is connected to node 1")
+    # print("[LISTENING] Node 2 is connected to node 1")
     arp_table_socket = {node2_ip: node2}
-    #print(arp_table_socket)
+    # print(arp_table_socket)
     while True:
         received_message = router.recv(1024)
         received_packet_header = received_message.decode("utf-8")
@@ -66,7 +66,7 @@ def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
     while node2 is None:
         node2 = conn
-        #print("Node 2 is online")
+        # print("Node 2 is online")
     connected = True
     while connected:
         received_message = conn.recv(1024)

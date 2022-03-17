@@ -24,7 +24,7 @@ def handle_client(conn, addr):
             received_packet.print_packet_information()
             received_packet.print_packet_integrity_status(node_mac, node_ip)
 
-            protocol =start_client_response()
+            protocol = start_client_response()
             start_protocol(protocol, received_packet, conn)
 
     conn.close()
@@ -38,28 +38,35 @@ def start():
 
         # doesn't start until connected to router
         if router_connection is not None:
-            #print("\n" + str(router_connection) + "\n")
+            # print("\n" + str(router_connection) + "\n")
             break
 
     thread = threading.Thread(target=handle_client, args=(router_connection, address))
     thread.start()
     print(f"\n[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
-    #IP Packet 
+    # IP Packet
     source_ip = node_ip
     destination_ip = "0x2A"
     payload = "MY DATA"
     ip_data_length = str(len(payload))
     protocol = "0"
 
-    #Ethernet Fame
+    # Ethernet Fame
     source_mac = node_mac
     destination_mac = router_mac
-    ip_packet = source_ip + destination_ip + ip_data_length +  protocol + payload
+    ip_packet = source_ip + destination_ip + ip_data_length + protocol + payload
     ethernet_data_length = str(len(ip_packet))
 
     packet = Packet(
-        source_mac, destination_mac, ethernet_data_length, source_ip, destination_ip, protocol,  ip_data_length, payload
+        source_mac,
+        destination_mac,
+        ethernet_data_length,
+        source_ip,
+        destination_ip,
+        protocol,
+        ip_data_length,
+        payload,
     )
     packet.print_packet_information()
     packet_header = packet.create_packet_header()
@@ -71,4 +78,3 @@ def start():
 print("********************************\n[STARTING] node 1 is starting...")
 print_node_information(node_ip, node_mac)
 start()
-

@@ -24,8 +24,8 @@ def handle_client():
 
             received_packet.print_packet_integrity_status(node_mac, node_ip)
 
-            destination_ip = received_packet.source_ip
-            destination_mac = received_packet.source_mac
+            # destination_ip = received_packet.source_ip
+            # destination_mac = received_packet.source_mac
 
             protocol = start_client_response()
 
