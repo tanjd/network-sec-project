@@ -28,9 +28,9 @@ arp_table_mac = {
 
 def handle_server():
     router.connect(server)
-    print("[LISTENING] Node 2 is connected to node 1")
+    #print("[LISTENING] Node 2 is connected to node 1")
     arp_table_socket = {node2_ip: node2}
-    print(arp_table_socket)
+    #print(arp_table_socket)
     while True:
         received_message = router.recv(1024)
         received_packet_header = received_message.decode("utf-8")
@@ -38,7 +38,7 @@ def handle_server():
 
             received_packet = Packet(received_packet_header)
 
-            print("\nThe packed received:")
+            print("\nThe packet received:")
             received_packet.print_packet_information()
 
             # find router_mac
@@ -66,14 +66,14 @@ def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
     while node2 is None:
         node2 = conn
-        print("node 2 is online")
+        #print("Node 2 is online")
     connected = True
     while connected:
         received_message = conn.recv(1024)
         received_packet_header = received_message.decode("utf-8")
         if received_packet_header:
             received_packet = Packet(received_packet_header)
-            print("\nThe packed received:")
+            print("\nThe packet received:")
             received_packet.print_packet_information()
 
             packet_header = received_packet.create_forward_packet(
@@ -85,7 +85,7 @@ def handle_client(conn, addr):
 
 def start():
     router_send.listen()
-    print("[LISTENING] r2 is listening")
+    print("[LISTENING] router is listening...")
 
     while (threading.activeCount() - 1) < 1:
         conn, addr = router_send.accept()
