@@ -33,15 +33,15 @@ class Packet:
         )
 
     def print_packet_information(self):
-        print(
-            "\nSource MAC address: {source_mac}"
+        print("********************************"
+            "\nSource MAC address:      {source_mac}"
             "\nDestination MAC address: {destination_mac}"
-            "\nEthernet Data Length: {ethernet_data_length} bytes"
-            "\nSource IP address: {source_ip}"
-            "\nDestination IP address: {destination_ip}"
-            "\nProtocol: {protocol}"
-            "\nIP PacketData length: {data_length}"
-            "\nPayload: {payload}".format(
+            "\nEthernet Data Length:    {ethernet_data_length} bytes"
+            "\nSource IP address:       {source_ip}"
+            "\nDestination IP address:  {destination_ip}"
+            "\nProtocol:                {protocol}"
+            "\nIP Packet Data length:   {data_length}"
+            "\nPayload:                 {payload}".format(
                 source_mac=self.source_mac,
                 destination_mac=self.destination_mac,
                 ethernet_data_length = self.ethernet_data_length,
@@ -67,12 +67,12 @@ class Packet:
     def print_packet_integrity_status(self, node_mac, node_ip):
         print(
             "\nPacket integrity:"
-            "\ndestination MAC address matches own MAC address: {mac}".format(
+            "\nDestination MAC address matches own MAC address: {mac}".format(
                 mac=(node_mac == self.destination_mac)
             )
         )
         print(
-            "\ndestination IP address matches own IP address: {mac}".format(
+            "\nDestination IP address matches own IP address: {mac}".format(
                 mac=(node_ip == self.destination_ip)
             )
         )
