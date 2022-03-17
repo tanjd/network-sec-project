@@ -20,7 +20,7 @@ def handle_client(conn, addr):
         received_packet_header = received_message.decode("utf-8")
         if received_packet_header:
             received_packet = Packet(received_packet_header)
-            print("\nRECEIVED PACKET FROM ", received_packet.source_mac)
+            print("\nRECEIVED PACKET .... ")
             received_packet.print_packet_information()
             received_packet.print_packet_integrity_status(node_mac, node_ip)
 
