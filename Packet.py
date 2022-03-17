@@ -1,31 +1,34 @@
 class Packet:
     def __init__(self, *args):
         if len(args) > 1:
-            # (source_ip, destination_ip, source_mac, destination_mac, protocol, payload)
-            self.source_ip = args[0]
-            self.destination_ip = args[1]
-            self.source_mac = args[2]
-            self.destination_mac = args[3]
-            self.protocol = args[4]
-            self.data_length = len(args[5])
-            self.payload = args[5]
+            # (source_mac, destination_mac, ethernet_data_length , source_ip, destination_ip, protocol , ip_data_length , payload)
+            self.source_mac = args[0]
+            self.destination_mac = args[1]
+            self.ethernet_data_length = args[2]
+            self.source_ip = args[3]
+            self.destination_ip = args[4]
+            self.protocol = args[5]
+            self.ip_data_length = args[6]
+            self.payload = args[7]
         else:
             self.source_mac = args[0][0:2]
             self.destination_mac = args[0][2:4]
-            self.source_ip = args[0][4:8]
-            self.destination_ip = args[0][8:12]
-            self.protocol = args[0][12:13]
-            self.data_length = args[0][13:14]
-            self.payload = args[0][14:]
+            self.ethernet_data_length = args[0][4:6]
+            self.source_ip = args[0][6:10]
+            self.destination_ip = args[0][10:14]
+            self.protocol = args[0][14:15]
+            self.ip_data_length = args[0][15:16]
+            self.payload = args[0][16:]
 
     def create_packet_header(self):
-        ethernet_header = self.source_mac + self.destination_mac
+   
+        ethernet_header = self.source_mac + self.destination_mac + self.ethernet_data_length
         ip_header = self.source_ip + self.destination_ip
         return (
             ethernet_header
             + ip_header
-            + str(self.protocol)
-            + str(self.data_length)
+            + self.protocol
+            + self.ip_data_length
             + self.payload
         )
 
@@ -33,29 +36,31 @@ class Packet:
         print(
             "\nSource MAC address: {source_mac}"
             "\nDestination MAC address: {destination_mac}"
+            "\nEthernet Data Length: {ethernet_data_length} bytes"
             "\nSource IP address: {source_ip}"
             "\nDestination IP address: {destination_ip}"
             "\nProtocol: {protocol}"
-            "\nData length: {data_length}"
+            "\nIP PacketData length: {data_length}"
             "\nPayload: {payload}".format(
                 source_mac=self.source_mac,
                 destination_mac=self.destination_mac,
+                ethernet_data_length = self.ethernet_data_length,
                 source_ip=self.source_ip,
                 destination_ip=self.destination_ip,
                 protocol=self.protocol,
-                data_length=self.data_length,
+                data_length=self.ip_data_length,
                 payload=self.payload,
             )
         )
 
     def create_forward_packet(self, source_mac, destination_mac):
-        ethernet_header = source_mac + destination_mac
+        ethernet_header = source_mac + destination_mac + self.ethernet_data_length
         ip_header = self.source_ip + self.destination_ip
         return (
             ethernet_header
             + ip_header
-            + str(self.protocol)
-            + str(self.data_length)
+            + self.protocol
+            + self.ip_data_length
             + self.payload
         )
 

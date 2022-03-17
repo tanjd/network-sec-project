@@ -20,7 +20,7 @@ def handle_client(conn, addr):
         received_packet_header = received_message.decode("utf-8")
         if received_packet_header:
             received_packet = Packet(received_packet_header)
-            print("\nThe packed received:")
+            print("\nThe packet received:")
             received_packet.print_packet_information()
             received_packet.print_packet_integrity_status(node_mac, node_ip)
 
@@ -42,15 +42,21 @@ def start():
     thread.start()
     print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
-    payload = "MY DATA"
+    #IP Packet 
     source_ip = node_ip
     destination_ip = "0x2A"
-    protocol = 0
+    payload = "MY DATA"
+    ip_data_length = str(len(payload))
+    protocol = "0"
+
+    #Ethernet Fame
     source_mac = node_mac
     destination_mac = router_mac
+    ip_packet = source_ip + destination_ip + ip_data_length +  protocol + payload
+    ethernet_data_length = str(len(ip_packet))
 
     packet = Packet(
-        source_ip, destination_ip, source_mac, destination_mac, protocol, payload
+        source_mac, destination_mac, ethernet_data_length, source_ip, destination_ip, protocol,  ip_data_length, payload
     )
     packet.print_packet_information()
     packet_header = packet.create_packet_header()

@@ -19,7 +19,7 @@ def handle_client():
         if received_packet_header:
             received_packet = Packet(received_packet_header)
 
-            print("\nThe packed received:")
+            print("\nThe packet received:")
             received_packet.print_packet_information()
 
             received_packet.print_packet_integrity_status(node_mac, node_ip)
@@ -31,11 +31,13 @@ def handle_client():
             answer = input()
             if answer == "y":
                 packet = Packet(
-                    node_ip,
-                    destination_ip,
                     node_mac,
                     destination_mac,
+                    received_packet.ethernet_data_length,
+                    node_ip,
+                    destination_ip,
                     received_packet.protocol,
+                    received_packet.ip_data_length,
                     received_packet.payload,
                 )
                 packet.print_packet_information()
