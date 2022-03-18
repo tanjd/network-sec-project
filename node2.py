@@ -7,25 +7,9 @@ from utility import (
     start_client_response,
     start_protocol,
     send_sample_packet,
+    start_receiver,
 )
 import threading
-
-
-def start_listening():
-    print("[LISTENING] Node 2 is connected to router")
-    connected = True
-    while connected:
-        global online
-        if not online:
-            break
-        received_message = node.recv(1024)
-        received_packet_header = received_message.decode("utf-8")
-        if received_packet_header:
-            received_packet = Packet(received_packet_header)
-
-            print("\nThe packet received:")
-            received_packet.print_packet_information()
-            received_packet.print_packet_integrity_status(node_mac, node_ip)
 
 
 node_ip = "0x2A"
@@ -50,7 +34,9 @@ except OSError as msg:
 try:
     node.connect(router)
     print("[Connecting] Node 2 is connected to router")
-    thread = threading.Thread(target=start_listening, args=(), daemon=True)
+    thread = threading.Thread(
+        target=start_receiver, args=(node, node_ip, node_mac), daemon=True
+    )
     thread.start()
 
     online = True
