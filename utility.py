@@ -16,21 +16,23 @@ def start_client_response():
 
     ACTIONS:
 
-    [1] Ping sender with same message
-    [2] Log received message
-    [3] Exit
+    [1] Ping sender [protocol 0]
+    [2] Send message for recipient to log [protocol 1]
+    [3] Disconnect recipient [protocol 2]
+    [4] Listen
+    [5] Terminate node
     """
     )
-    response = input("Enter number (1,2,3) of the action you'd like to take: ")
+    response = input("Enter number (1,2,3,4 & 5) of the action you'd like to take: ")
 
     valid = False
     while not valid:
         try:
             protocol = int(response) - 1
         except (ValueError):
-            response = input("Invalid action. Please enter a number between 1-3: ")
-        if protocol not in [0, 1, 2]:
-            response = input("Invalid action. Please enter a number between 1-3: ")
+            response = input("Invalid action. Please enter a number between 1-5: ")
+        if protocol not in [0, 1, 2, 3, 4]:
+            response = input("Invalid action. Please enter a number between 1-5: ")
         else:
             valid = True
     return protocol
@@ -66,3 +68,32 @@ def start_protocol(protocol, received_packet, node):
         print("LOG TBC")
     else:
         print("KILL TBC")
+
+
+def send_sample_packet(node, node_ip, destination_ip, node_mac, router_mac):
+    # IP Packet
+    source_ip = node_ip
+    destination_ip = destination_ip
+    payload = "MY DATA"
+    ip_data_length = str(len(payload))
+    protocol = "0"
+
+    # Ethernet Fame
+    source_mac = node_mac
+    destination_mac = router_mac
+    ip_packet = source_ip + destination_ip + ip_data_length + protocol + payload
+    ethernet_data_length = str(len(ip_packet))
+
+    packet = Packet(
+        source_mac,
+        destination_mac,
+        ethernet_data_length,
+        source_ip,
+        destination_ip,
+        protocol,
+        ip_data_length,
+        payload,
+    )
+    packet.print_packet_information()
+    packet_header = packet.create_packet_header()
+    node.send(bytes(packet_header, "utf-8"))
