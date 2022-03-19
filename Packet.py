@@ -79,3 +79,10 @@ class Packet:
                 mac=(node_ip == self.destination_ip)
             )
         )
+
+    def check_validity(self, firewall_rules):
+        if "ALL" in firewall_rules["D"] or self.source_ip in firewall_rules["D"]:
+            return False
+        if "ALL" in firewall_rules["A"] or self.source_ip in firewall_rules["A"]:
+            return True
+        return False

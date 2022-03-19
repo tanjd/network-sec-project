@@ -108,20 +108,28 @@ def retrieve_packet(node, node_ip, node_mac):
     return received_packet
 
 
-def start_receiver(node, node_ip, node_mac):
+def start_receiver(node, node_ip, node_mac, firewall_rules=None):
     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
     connected = True
+
     while connected:
+        is_packet_valid = True
+
         received_packet = retrieve_packet(node, node_ip, node_mac)
-        if received_packet.protocol == 0:
-            # return received message to sender
-            pass
-        elif received_packet.protocol == 1:
-            # log message down
-            pass
-        elif received_packet.protocol == 2:
-            # terminate node/ disconnect from network
-            pass
-        else:
-            # invalid protocol
-            pass
+
+        if firewall_rules:
+            print(f"\n[Checking] firewall rules {firewall_rules}")
+
+            is_packet_valid = received_packet.check_validity(firewall_rules)
+            print(f"\n[Checking] Packet is {'valid' if is_packet_valid else 'invalid'}")
+
+        if is_packet_valid:
+            if received_packet.protocol == 0:
+                # return received message to sender
+                pass
+            elif received_packet.protocol == 1:
+                # log message down
+                pass
+            elif received_packet.protocol == 2:
+                # terminate node/ disconnect from network
+                pass
