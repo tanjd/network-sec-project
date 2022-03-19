@@ -63,16 +63,14 @@ try:
     while online:
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
-            destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac)
-        protocol = start_client_response()
+            protocol = start_client_response()
 
-        if protocol == 3:
-            print("Just listening")
-        if protocol == 4:
-            print("Terminating node")
-            online = False
-            node.close()
+            if protocol == 0:
+
+                destination_mac = router_mac
+                send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac)
+
+       
 except OSError as msg:
     node.close()
     print(msg)

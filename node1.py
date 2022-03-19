@@ -65,18 +65,15 @@ try:
 
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
-            destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac)
+            protocol = start_client_response()
+            if protocol == 0:
+                destination_mac = router_mac
+                send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac)
 
-        protocol = start_client_response()
+        #protocol = start_client_response()
 
         # do checking of protocol here then call the different protocol methods instead of calling one big method to then split what method to do
-        if protocol == 3:
-            print("Just listening")
-        if protocol == 4:
-            print("Terminating node")
-            online = False
-            node.close()
+   
 except OSError as msg:
     node.close()
     print(msg)

@@ -36,7 +36,7 @@ class Packet:
 
     def print_packet_information(self):
         print(
-            "********************************"
+            "\n********************************"
             "\nSource MAC address:      {source_mac}"
             "\nDestination MAC address: {destination_mac}"
             "\nEthernet Data Length:    {ethernet_data_length} bytes"
