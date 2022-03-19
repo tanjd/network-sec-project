@@ -27,10 +27,7 @@ def start_client_response():
 
     valid = False
     while not valid:
-        try:
-            protocol = int(response) - 1
-        except (ValueError):
-            response = input("Invalid action. Please enter a number between 1-5: ")
+        protocol = int(response) - 1
         if protocol not in [0, 1, 2, 3, 4]:
             response = input("Invalid action. Please enter a number between 1-5: ")
         else:

@@ -19,54 +19,56 @@ def handle_client(ip, conn):
 
             if received_packet.destination_mac == router1_mac:
                 source_mac = router2_mac
-                sending_conn = r2_arp_table_socket[received_packet.destination_ip]
+                sending_connections = arp_table_socket["r2"].values()
             else:
                 source_mac = router1_mac
-                sending_conn = r1_arp_table_socket[received_packet.destination_ip]
+                sending_connections = arp_table_socket["r1"].values()
 
             packet_header = received_packet.create_forward_packet(
                 source_mac, arp_table_mac[received_packet.destination_ip]
             )
-            sending_conn.send(bytes(packet_header, "utf-8"))
+
+            for sending_conn in sending_connections:
+                sending_conn.send(bytes(packet_header, "utf-8"))
     conn.close()
 
 
 def handle_clients(arp_table_socket):
-    # print(arp_table_socket)
     for ip, conn in arp_table_socket.items():
         thread = threading.Thread(target=handle_client, args=(ip, conn))
         thread.start()
 
 
 def start_listening(router):
+    global arp_table_socket
+    socket_port = router.getsockname()[1]
+
     print(f"listening on {router.getsockname()}\n")
     router.listen()
-    global r1_arp_table_socket
-    global r2_arp_table_socket
-    global node1
-    global node2
-    global node3
-    while node1 is None and router.getsockname()[1] == R1_PORT:
+
+    while arp_table_socket["r1"][node1_ip] is None and socket_port == R1_PORT:
         conn, addr = router.accept()
-        if node1 is None:
-            node1 = conn
+        if arp_table_socket["r1"][node1_ip] is None:
+            arp_table_socket["r1"][node1_ip] = conn
             print("Node 1 is online")
 
-    while (node2 is None or node3 is None) and router.getsockname()[1] == R2_PORT:
+    while (
+        arp_table_socket["r2"][node2_ip] is None
+        or arp_table_socket["r2"][node3_ip] is None
+    ) and socket_port == R2_PORT:
         conn, addr = router.accept()
-        if node2 is None:
-            node2 = conn
+        if arp_table_socket["r2"][node2_ip] is None:
+            arp_table_socket["r2"][node2_ip] = conn
             print("Node 2 is online")
-        elif node3 is None:
-            node3 = conn
+        elif arp_table_socket["r2"][node3_ip] is None:
+            arp_table_socket["r2"][node3_ip] = conn
             print("Node 3 is online")
 
-    if router.getsockname()[1] == R1_PORT:
-        r1_arp_table_socket = {node1_ip: node1}
-        handle_clients(r1_arp_table_socket)
+    if socket_port == R1_PORT:
+        router_key = "r1"
     else:
-        r2_arp_table_socket = {node2_ip: node2, node3_ip: node3}
-        handle_clients(r2_arp_table_socket)
+        router_key = "r2"
+    handle_clients(arp_table_socket[router_key])
 
 
 HOST = "localhost"
@@ -91,12 +93,13 @@ arp_table_mac = {
     node2_ip: node2_mac,
     node3_ip: node3_mac,
 }
+
 node1 = None
 node2 = None
 node3 = None
 
-r1_arp_table_socket = {node1_ip: node1}
-r2_arp_table_socket = {node2_ip: node2, node3_ip: node3}
+arp_table_socket = {"r1": {node1_ip: node1}, "r2": {node2_ip: node2, node3_ip: node3}}
+
 time.sleep(1)
 
 print("[STARTING] router is starting...")
@@ -112,14 +115,18 @@ try:
 except OSError as msg:
     router1 = None
     router2 = None
+
     print(msg)
 try:
-    router1.bind((HOST, R1_PORT))  # R1
-    router2.bind((HOST, R2_PORT))  # R2
+    router1.bind((HOST, R1_PORT))
+    router2.bind((HOST, R2_PORT))
+
     print("[LISTENING]")
+
     for router in routers:
         thread = threading.Thread(target=start_listening, args=(router,), daemon=True)
         thread.start()
+
     online = True
     while online:
         answer = input("\nDo you want to terminate router? ")
@@ -132,8 +139,10 @@ try:
 except OSError as msg:
     router1.close()
     router1 = None
+
     router2.close()
     router2 = None
+
     print(msg)
 
 if router1 is None or router2 is None:
