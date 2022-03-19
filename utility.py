@@ -96,15 +96,32 @@ def send_sample_packet(node, node_ip, destination_ip, node_mac, router_mac):
     node.send(bytes(packet_header, "utf-8"))
 
 
+def retrieve_packet(node, node_ip, node_mac):
+    received_message = node.recv(1024)
+    received_packet_header = received_message.decode("utf-8")
+    if received_packet_header:
+        received_packet = Packet(received_packet_header)
+
+        print("\nThe packet received:")
+        received_packet.print_packet_information()
+        received_packet.print_packet_integrity_status(node_mac, node_ip)
+    return received_packet
+
+
 def start_receiver(node, node_ip, node_mac):
     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
     connected = True
     while connected:
-        received_message = node.recv(1024)
-        received_packet_header = received_message.decode("utf-8")
-        if received_packet_header:
-            received_packet = Packet(received_packet_header)
-
-            print("\nThe packet received:")
-            received_packet.print_packet_information()
-            received_packet.print_packet_integrity_status(node_mac, node_ip)
+        received_packet = retrieve_packet(node, node_ip, node_mac)
+        if received_packet.protocol == 0:
+            # return received message to sender
+            pass
+        elif received_packet.protocol == 1:
+            # log message down
+            pass
+        elif received_packet.protocol == 2:
+            # terminate node/ disconnect from network
+            pass
+        else:
+            # invalid protocol
+            pass

@@ -7,9 +7,29 @@ from utility import (
     start_client_response,
     start_protocol,
     send_sample_packet,
+    retrieve_packet,
     start_receiver,
 )
 import threading
+
+
+# def start_receiver(node, node_ip, node_mac):
+#     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
+#     connected = True
+#     while connected:
+#         received_packet = retrieve_packet(node, node_ip, node_mac)
+#         if received_packet.protocol == 0:
+#             # return received message to sender
+#             pass
+#         elif received_packet.protocol == 1:
+#             # log message down
+#             pass
+#         elif received_packet.protocol == 2:
+#             # terminate node/ disconnect from network
+#             pass
+#         else:
+#             # invalid protocol
+#             pass
 
 
 node_ip = "0x1A"
