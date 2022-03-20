@@ -11,6 +11,7 @@ def print_node_information(node_ip, node_mac):
 
 def start_client_response():
     # E.G When Node 1 sends datagram to Node 2, start_client_response() allows Node 2 to select desired action (i.e. protocol). Returns protocol number.
+
     print(
         """\n**************************************
 
