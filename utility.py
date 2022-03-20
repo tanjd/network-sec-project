@@ -74,7 +74,7 @@ def send_sample_packet(node, node_ip, destination_ip, node_mac, router_mac):
     destination_ip = destination_ip
     payload = "MY DATA"
     ip_data_length = str(len(payload))
-    protocol = "0"
+    protocol = "2"
 
     # Ethernet Fame
     source_mac = node_mac
@@ -125,12 +125,14 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
             print(f"\n[Checking] Packet is {'valid' if is_packet_valid else 'invalid'}")
 
         if is_packet_valid:
-            if received_packet.protocol == 0:
+            if received_packet.protocol == '0':
                 # return received message to sender
                 pass
-            elif received_packet.protocol == 1:
+            elif received_packet.protocol == '1':
                 # log message down
                 pass
-            elif received_packet.protocol == 2:
+            elif received_packet.protocol == '2':
                 # terminate node/ disconnect from network
-                pass
+                print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
+                connected = False
+                node.close()

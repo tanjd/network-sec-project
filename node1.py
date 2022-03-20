@@ -47,7 +47,7 @@ try:
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x3A", node_mac, destination_mac)
+            send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac)
 
         protocol = start_client_response()
 

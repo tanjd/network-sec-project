@@ -10,7 +10,15 @@ def handle_client(ip, conn):
     print("[Ready to receiving packets]\n")
     connected = True
     while connected:
-        received_message = conn.recv(1024)
+        try:
+            received_message = conn.recv(1024)
+        except:
+            for socket_connections in arp_table_socket.values():
+                for ip, node_conn in socket_connections.items():
+                    if node_conn == conn:
+                        socket_connections[ip] = None
+            connected = False
+
         received_packet_header = received_message.decode("utf-8")
         if received_packet_header:
             received_packet = Packet(received_packet_header)
@@ -29,7 +37,11 @@ def handle_client(ip, conn):
             )
 
             for sending_conn in sending_connections:
-                sending_conn.send(bytes(packet_header, "utf-8"))
+                try:
+                    sending_conn.send(bytes(packet_header, "utf-8"))
+                except ConnectionResetError:
+                    print(f"\n {received_packet.destination_ip} is not online.")
+                    connected = False
     conn.close()
 
 
@@ -98,7 +110,8 @@ node1 = None
 node2 = None
 node3 = None
 
-arp_table_socket = {"r1": {node1_ip: node1}, "r2": {node2_ip: node2, node3_ip: node3}}
+arp_table_socket = {"r1": {node1_ip: node1},
+                    "r2": {node2_ip: node2, node3_ip: node3}}
 
 time.sleep(1)
 
@@ -124,7 +137,8 @@ try:
     print("[LISTENING]")
 
     for router in routers:
-        thread = threading.Thread(target=start_listening, args=(router,), daemon=True)
+        thread = threading.Thread(
+            target=start_listening, args=(router,), daemon=True)
         thread.start()
 
     online = True
