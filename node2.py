@@ -13,25 +13,6 @@ from utility import (
 import threading
 
 
-# def start_receiver(node, node_ip, node_mac):
-#     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
-#     connected = True
-#     while connected:
-#         received_packet = retrieve_packet(node, node_ip, node_mac)
-#         if received_packet.protocol == 0:
-#             # return received message to sender
-#             pass
-#         elif received_packet.protocol == 1:
-#             # log message down
-#             pass
-#         elif received_packet.protocol == 2:
-#             # terminate node/ disconnect from network
-#             pass
-#         else:
-#             # invalid protocol
-#             pass
-
-
 node_ip = "0x2A"
 node_mac = "N2"
 
@@ -63,14 +44,17 @@ try:
     while online:
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
-            protocol = start_client_response()
+            destination_mac = router_mac
+            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac)
+        protocol = start_client_response()
 
-            if protocol == 0:
 
-                destination_mac = router_mac
-                send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac)
-
-       
+        if protocol == 3:
+            print("Just listening")
+        if protocol == 4:
+            print("Terminating node")
+            online = False
+            node.close()
 except OSError as msg:
     node.close()
     print(msg)

@@ -13,25 +13,6 @@ from utility import (
 import threading
 
 
-# def start_receiver(node, node_ip, node_mac):
-#     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
-#     connected = True
-#     while connected:
-#         received_packet = retrieve_packet(node, node_ip, node_mac)
-#         if received_packet.protocol == 0:
-#             # return received message to sender
-#             pass
-#         elif received_packet.protocol == 1:
-#             # log message down
-#             pass
-#         elif received_packet.protocol == 2:
-#             # terminate node/ disconnect from network
-#             pass
-#         else:
-#             # invalid protocol
-#             pass
-
-
 node_ip = "0x3A"
 node_mac = "N3"
 
@@ -42,6 +23,8 @@ PORT = 8200
 router = (HOST, PORT)
 node = None
 time.sleep(1)
+
+firewall_rules = {"A": [], "D": ["ALL"]}
 
 print("[STARTING] node 3 is starting...")
 print_node_information(node_ip, node_mac)
@@ -55,7 +38,9 @@ try:
     node.connect(router)
     print("[Connecting] Node 3 is connected to router")
     thread = threading.Thread(
-        target=start_receiver, args=(node, node_ip, node_mac), daemon=True
+        target=start_receiver,
+        args=(node, node_ip, node_mac, firewall_rules),
+        daemon=True,
     )
     thread.start()
 
