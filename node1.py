@@ -5,9 +5,7 @@ from Packet import Packet
 from utility import (
     print_node_information,
     choose_protocol,
-    start_protocol,
     send_sample_packet,
-    retrieve_packet,
     start_receiver,
 )
 import threading
@@ -43,7 +41,6 @@ try:
 
     online = True
     while online:
-
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
             protocol = choose_protocol()

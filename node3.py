@@ -5,9 +5,7 @@ from Packet import Packet
 from utility import (
     print_node_information,
     choose_protocol,
-    start_protocol,
     send_sample_packet,
-    retrieve_packet,
     start_receiver,
 )
 import threading
@@ -50,7 +48,7 @@ try:
         if answer == "y":
             protocol = choose_protocol()
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac, protocol=)
+            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac, protocol)
 
         if protocol == 3:
             print("Just listening")

@@ -20,52 +20,18 @@ def choose_protocol():
     [1] Ping sender [protocol 0]
     [2] Send message for recipient to log [protocol 1]
     [3] Disconnect recipient [protocol 2]
-    [4] Listen
-    [5] Terminate node
     """
     )
-    response = input("Enter number (1,2,3,4 & 5) of the action you'd like to take: ")
+    response = input("Enter number (1,2,3) of the action you'd like to take: ")
 
     valid = False
     while not valid:
         protocol = int(response) - 1
-        if protocol not in [0, 1, 2, 3, 4]:
+        if protocol not in [0, 1, 2]:
             response = input("Invalid action. Please enter a number between 1-5: ")
         else:
             valid = True
     return protocol
-
-
-def start_protocol(protocol, received_packet, node):
-    # Initiates respective protocol based on Node's selection from start_client_response()
-    # PARAMETERS:
-    # protocol: Integer value between 0-2
-    # packet: received_packet Packet object
-    # node: socket connection
-
-    # PING
-    if protocol == 0:
-        packet_to_send = Packet(
-            received_packet.destination_mac,
-            received_packet.source_mac,
-            received_packet.ethernet_data_length,
-            received_packet.destination_ip,
-            received_packet.source_ip,
-            received_packet.protocol,
-            received_packet.ip_data_length,
-            received_packet.payload,
-        )
-
-        print("\nSENDING PACKET ......\n")
-        packet_to_send.print_packet_information()
-
-        packet_header = packet_to_send.create_packet_header()
-        node.send(bytes(packet_header, "utf-8"))
-
-    elif protocol == 1:
-        print("LOG TBC")
-    else:
-        print("KILL TBC")
 
 
 def send_sample_packet(node, node_ip, destination_ip, node_mac, router_mac, protocol):
@@ -127,19 +93,23 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
         if is_packet_valid:
             if received_packet.protocol == '0':
                 # return received message to sender
+
+                #protocol = 3 indicates packet is a ping reply packet
+
+                protocol = "3"
                 packet_to_send = Packet(
                     received_packet.destination_mac,
                     received_packet.source_mac,
                     received_packet.ethernet_data_length,
                     received_packet.destination_ip,
                     received_packet.source_ip,
-                    received_packet.protocol,
+                    protocol,
                     received_packet.ip_data_length,
                     received_packet.payload,
                 )
 
-                print("\nSENDING PACKET ......\n")
-                packet_to_send.print_packet_information()
+                print(f"\n[PING] REPLYING TO {received_packet.destination_ip}\n")
+                # packet_to_send.print_packet_information()
 
                 packet_header = packet_to_send.create_packet_header()
                 node.send(bytes(packet_header, "utf-8"))
@@ -153,3 +123,6 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
                 connected = False
                 node.close()
+            elif received_packet.protocol == "3":
+                print(f"\n[PING] REPLY FROM {received_packet.destination_ip} RECEIVED ")
+
