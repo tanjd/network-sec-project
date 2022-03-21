@@ -47,11 +47,8 @@ try:
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
             protocol = start_client_response()
-            if protocol == 0:
-                destination_mac = router_mac
-                send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac)
-
-        #protocol = start_client_response()
+            destination_mac = router_mac
+            send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac, protocol)
 
         # do checking of protocol here then call the different protocol methods instead of calling one big method to then split what method to do
    

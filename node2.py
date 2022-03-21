@@ -44,9 +44,9 @@ try:
     while online:
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
+            protocol = start_client_response()
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac)
-        protocol = start_client_response()
+            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac, protocol)
 
 
         if protocol == 3:

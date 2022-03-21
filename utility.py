@@ -3,7 +3,7 @@ from Packet import Packet
 
 def print_node_information(node_ip, node_mac):
     print(
-        "*******************************"
+        "\n*******************************"
         "\nNode IP address:     {node_ip}"
         "\nNode MAC address:    {node_mac}".format(node_ip=node_ip, node_mac=node_mac)
     )
@@ -68,13 +68,13 @@ def start_protocol(protocol, received_packet, node):
         print("KILL TBC")
 
 
-def send_sample_packet(node, node_ip, destination_ip, node_mac, router_mac):
+def send_sample_packet(node, node_ip, destination_ip, node_mac, router_mac, protocol):
     # IP Packet
     source_ip = node_ip
     destination_ip = destination_ip
     payload = "MY DATA"
     ip_data_length = str(len(payload))
-    protocol = "2"
+    protocol = str(protocol)
 
     # Ethernet Fame
     source_mac = node_mac
@@ -127,6 +127,23 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
         if is_packet_valid:
             if received_packet.protocol == '0':
                 # return received message to sender
+                packet_to_send = Packet(
+                    received_packet.destination_mac,
+                    received_packet.source_mac,
+                    received_packet.ethernet_data_length,
+                    received_packet.destination_ip,
+                    received_packet.source_ip,
+                    received_packet.protocol,
+                    received_packet.ip_data_length,
+                    received_packet.payload,
+                )
+
+                print("\nSENDING PACKET ......\n")
+                packet_to_send.print_packet_information()
+
+                packet_header = packet_to_send.create_packet_header()
+                node.send(bytes(packet_header, "utf-8"))
+
                 pass
             elif received_packet.protocol == '1':
                 # log message down
