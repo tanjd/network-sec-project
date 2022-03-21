@@ -4,7 +4,7 @@ import time
 from Packet import Packet
 from utility import (
     print_node_information,
-    start_client_response,
+    choose_protocol,
     start_protocol,
     send_sample_packet,
     retrieve_packet,
@@ -46,7 +46,7 @@ try:
 
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
-            protocol = start_client_response()
+            protocol = choose_protocol()
             destination_mac = router_mac
             send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac, protocol)
 

@@ -4,7 +4,7 @@ import time
 from Packet import Packet
 from utility import (
     print_node_information,
-    start_client_response,
+    choose_protocol,
     start_protocol,
     send_sample_packet,
     retrieve_packet,
@@ -48,9 +48,9 @@ try:
     while online:
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
+            protocol = choose_protocol()
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac)
-        protocol = start_client_response()
+            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac, protocol=)
 
         if protocol == 3:
             print("Just listening")
