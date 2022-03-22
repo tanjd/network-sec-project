@@ -1,3 +1,4 @@
+import logging
 from Packet import Packet
 
 
@@ -117,7 +118,15 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 pass
             elif received_packet.protocol == '1':
                 # log message down
-                pass
+
+                # create logger
+                logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(message)s', filename='sample.log')
+
+                # logging.info(received_packet.payload)
+                logging.info(received_packet.source_ip + " - " + received_packet.destination_ip + " - " + received_packet.payload)
+                
+                print(f"\n[LOG] data logged successfully.")
+
             elif received_packet.protocol == '2':
                 # terminate node/ disconnect from network
                 print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
