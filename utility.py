@@ -91,10 +91,10 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
             print(f"\n[Checking] Packet is {'valid' if is_packet_valid else 'invalid'}")
 
         if is_packet_valid:
-            if received_packet.protocol == '0':
+            if received_packet.protocol == "0":
                 # return received message to sender
 
-                #protocol = 3 indicates packet is a ping reply packet
+                # protocol = 3 indicates packet is a ping reply packet
 
                 protocol = "3"
                 packet_to_send = Packet(
@@ -114,15 +114,13 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 packet_header = packet_to_send.create_packet_header()
                 node.send(bytes(packet_header, "utf-8"))
 
-                pass
-            elif received_packet.protocol == '1':
+            elif received_packet.protocol == "1":
                 # log message down
                 pass
-            elif received_packet.protocol == '2':
+            elif received_packet.protocol == "2":
                 # terminate node/ disconnect from network
                 print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
                 connected = False
                 node.close()
             elif received_packet.protocol == "3":
                 print(f"\n[PING] REPLY FROM {received_packet.destination_ip} RECEIVED ")
-

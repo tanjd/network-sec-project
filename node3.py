@@ -24,6 +24,13 @@ time.sleep(1)
 
 firewall_rules = {"A": [], "D": ["ALL"]}
 
+
+def display_firewall_rules(firewall_rules):
+    print("Current firewall rules: ")
+    for key in firewall_rules.keys():
+        print(f" {key} : {firewall_rules[key]}")
+
+
 print("[STARTING] node 3 is starting...")
 print_node_information(node_ip, node_mac)
 
@@ -44,11 +51,29 @@ try:
 
     online = True
     while online:
+        print(
+            """\n**************************************
+
+            ACTIONS:
+
+            [1] Configure firewall rules
+            [2] Choose protocol
+            [3] Terminate Node
+            """
+        )
+
+        # check for valid action
+        answer = input("\nPlease select an action: ")
+        if answer == "1":
+            display_firewall_rules(firewall_rules)
+            # set firewall rules
         answer = input("\nDo you want to send the sample data (y|n): ")
         if answer == "y":
             protocol = choose_protocol()
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac, protocol)
+            send_sample_packet(
+                node, node_ip, "0x1A", node_mac, destination_mac, protocol
+            )
 
         if protocol == 3:
             print("Just listening")

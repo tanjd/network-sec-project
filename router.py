@@ -110,8 +110,7 @@ node1 = None
 node2 = None
 node3 = None
 
-arp_table_socket = {"r1": {node1_ip: node1},
-                    "r2": {node2_ip: node2, node3_ip: node3}}
+arp_table_socket = {"r1": {node1_ip: node1}, "r2": {node2_ip: node2, node3_ip: node3}}
 
 time.sleep(1)
 
@@ -137,8 +136,7 @@ try:
     print("[LISTENING]")
 
     for router in routers:
-        thread = threading.Thread(
-            target=start_listening, args=(router,), daemon=True)
+        thread = threading.Thread(target=start_listening, args=(router,), daemon=True)
         thread.start()
 
     online = True

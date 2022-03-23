@@ -45,10 +45,12 @@ try:
         if answer == "y":
             protocol = choose_protocol()
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x2A", node_mac, destination_mac, protocol)
+            send_sample_packet(
+                node, node_ip, "0x2A", node_mac, destination_mac, protocol
+            )
 
         # do checking of protocol here then call the different protocol methods instead of calling one big method to then split what method to do
-   
+
 except OSError as msg:
     node.close()
     print(msg)
