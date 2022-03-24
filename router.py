@@ -3,7 +3,7 @@ import sys
 import time
 import threading
 from Packet import Packet
-from utility import decode_packet
+
 
 def handle_client(ip, conn):
     print(f"\n[NEW CONNECTION] {ip} - {conn} connected.")
@@ -11,37 +11,40 @@ def handle_client(ip, conn):
     connected = True
     while connected:
         try:
-            received_message = conn.recv(1024)
+            received_packet = conn.recv(1024)
+            if received_packet:
+                print("\nThe packet received:")
+
+                received_packet = Packet(received_packet)
+                received_packet.print_packet_information()
+
+                if received_packet.destination_mac == bytes(router1_mac, "utf-8"):
+                    source_mac = router2_mac
+                    sending_connections = arp_table_socket["r2"].values()
+                else:
+                    source_mac = router1_mac
+                    sending_connections = arp_table_socket["r1"].values()
+
+                received_packet.create_forward_packet(
+                    source_mac, arp_table_mac[received_packet.destination_ip.hex()]
+                )
+
+                for sending_conn in sending_connections:
+                    try:
+                        packet_header = received_packet.create_packet_header()
+                        sending_conn.sendall(packet_header)
+                    except ConnectionResetError:
+                        print(
+                            f"\n {received_packet.destination_ip.hex()} is not online."
+                        )
+                        connected = False
         except:
             for socket_connections in arp_table_socket.values():
                 for ip, node_conn in socket_connections.items():
                     if node_conn == conn:
                         socket_connections[ip] = None
             connected = False
-        received_packet = decode_packet(received_message)
-        if received_packet:
-            # received_packet = Packet(received_packet_header)
-            print("\nThe packet received:")
-            received_packet.print_packet_information()
 
-            if received_packet.destination_mac == router1_mac:
-                source_mac = router2_mac
-                sending_connections = arp_table_socket["r2"].values()
-            else:
-                source_mac = router1_mac
-                sending_connections = arp_table_socket["r1"].values()
-
-            packet_header = received_packet.create_forward_packet(
-                source_mac, arp_table_mac[received_packet.destination_ip]
-            )
-
-            for sending_conn in sending_connections:
-                try:
-                    encoded_packet = packet_header.encode_packet()
-                    sending_conn.send(encoded_packet)
-                except ConnectionResetError:
-                    print(f"\n {received_packet.destination_ip} is not online.")
-                    connected = False
     conn.close()
 
 
@@ -69,9 +72,11 @@ def start_listening(router):
         or arp_table_socket["r2"][node3_ip] is None
     ) and socket_port == R2_PORT:
         conn, addr = router.accept()
+
         if arp_table_socket["r2"][node2_ip] is None:
             arp_table_socket["r2"][node2_ip] = conn
             print("Node 2 is online")
+
         elif arp_table_socket["r2"][node3_ip] is None:
             arp_table_socket["r2"][node3_ip] = conn
             print("Node 3 is online")

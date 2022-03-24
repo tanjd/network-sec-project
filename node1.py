@@ -1,10 +1,8 @@
 import socket
 import sys
 import time
-from Packet import Packet
 from utility import (
     print_node_information,
-    choose_recipient,
     choose_protocol,
     send_data,
     start_receiver,

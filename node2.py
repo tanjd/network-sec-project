@@ -1,11 +1,9 @@
 import socket
 import sys
 import time
-from Packet import Packet
 from utility import (
     print_node_information,
     choose_protocol,
-    choose_recipient,
     send_data,
     start_receiver,
 )
@@ -59,7 +57,7 @@ try:
             print("TBC")
 
         time.sleep(1)
-        
+
 except OSError as msg:
     node.close()
     print(msg)
