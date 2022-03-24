@@ -5,7 +5,8 @@ from Packet import Packet
 from utility import (
     print_node_information,
     choose_protocol,
-    send_sample_packet,
+    choose_recipient,
+    send_data,
     start_receiver,
 )
 import threading
@@ -40,12 +41,18 @@ try:
 
     online = True
     while online:
-        answer = input("\nDo you want to send the sample data (y|n): ")
-        if answer == "y":
-            protocol = choose_protocol()
             destination_mac = router_mac
-            send_sample_packet(node, node_ip, "0x1A", node_mac, destination_mac,protocol)
-
+            protocol = choose_protocol()
+            if protocol in [0,1,2]:
+                ip_addr = choose_recipient()
+                answer = input("\nDo you want to send the sample data (y|n): ")
+                if answer == "y":
+                    data = "MY DATA"
+                else:
+                    data = input("\nEnter a message: ")
+                send_data(node, node_ip, ip_addr, node_mac, destination_mac, protocol, data)
+            else:
+                print("TBC")
 
 except OSError as msg:
     node.close()
