@@ -3,17 +3,25 @@ from Packet import Packet
 
 
 def decode_packet(received_packet):
-    packet = Packet(received_packet)
-    if packet:
+    if received_packet:
+        source_mac = received_packet[0:2].decode("utf-8")
+        destination_mac = received_packet[2:4].decode("utf-8")
+        ethernet_data_length = int.from_bytes(received_packet[4:5], byteorder="big")
+        source_ip = received_packet[5:6].hex()
+        destination_ip = received_packet[6:7].hex()
+        protocol = int.from_bytes(received_packet[7:8], byteorder="big")
+        ip_data_length = int.from_bytes(received_packet[8:9], byteorder="big")
+        payload = received_packet[9:].decode("utf-8")
+
         return Packet(
-            packet.source_mac.decode("utf-8"),
-            packet.destination_mac.decode("utf-8"),
-            int.from_bytes(packet.ethernet_data_length, byteorder="big"),
-            packet.source_ip.hex(),
-            packet.destination_ip.hex(),
-            int.from_bytes(packet.protocol, byteorder="big"),
-            int.from_bytes(packet.ip_data_length, byteorder="big"),
-            packet.payload.decode("utf-8"),
+            source_mac,
+            destination_mac,
+            ethernet_data_length,
+            source_ip,
+            destination_ip,
+            protocol,
+            ip_data_length,
+            payload,
         )
     return None
 
@@ -45,8 +53,7 @@ def choose_recipient():
 def choose_protocol():
     # E.G When Node 1 sends datagram to Node 2, start_client_response() allows Node 2 to select desired action (i.e. protocol). Returns protocol number.
 
-    print(
-        """\n**************************************
+    actions = """\n**************************************
 
     ACTIONS:
 
@@ -57,16 +64,22 @@ def choose_protocol():
     [5] Sniffing Attack [TBC]
     [6] Open Cat [TBC]
     """
-    )
+    print(actions)
     response = input("Enter number (1,2,3,4,5,6) of the action you'd like to take: ")
 
     valid = False
     while not valid:
-        protocol = int(response) - 1
-        if protocol not in [0, 1, 2, 3, 4, 5]:
-            response = input("Invalid action. Please enter a number between 1-5: ")
+        if response == "":
+            print(actions)
+            response = input(
+                "Enter number (1,2,3,4,5,6) of the action you'd like to take: "
+            )
         else:
-            valid = True
+            protocol = int(response) - 1
+            if protocol not in [0, 1, 2, 3, 4, 5]:
+                response = input("Invalid action. Please enter a number between 1-5: ")
+            else:
+                valid = True
     return protocol
 
 
@@ -80,8 +93,15 @@ def send_data(node, node_ip, destination_ip, node_mac, router_mac, protocol, dat
     # Ethernet Fame
     source_mac = node_mac
     destination_mac = router_mac
+
+    # Max Length of IP Payload: 251 (\xfb)
+    # Max length of ethernet: 255 bytes (\xff)
     ethernet_data_length = (
-        len(source_ip) + len(destination_ip) + ip_data_length + protocol + len(payload)
+        len(bytes.fromhex(source_ip))
+        + len(bytes.fromhex(destination_ip))
+        + len(str(protocol))
+        + len(payload)
+        + len(ip_data_length.to_bytes(1, byteorder="big"))
     )
 
     packet = Packet(
@@ -98,7 +118,7 @@ def send_data(node, node_ip, destination_ip, node_mac, router_mac, protocol, dat
     packet.print_packet_information()
     # packet_header = packet.create_packet_header()
     node.send(encoded_packet)
-    return
+    return True
 
 
 def retrieve_packet(node, node_ip, node_mac):
@@ -115,7 +135,7 @@ def retrieve_packet(node, node_ip, node_mac):
 
 def get_file_name(node_ip):
     if node_ip == "1a":
-        return "nod.log"
+        return "node1.log"
     elif node_ip == "2a":
         return "node2.log"
     elif node_ip == "3a":
@@ -139,8 +159,8 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
 
         if is_packet_valid:
             # PING
-            if received_packet.protocol == "0":
-                protocol = "6"
+            if received_packet.protocol == 0:
+                protocol = 6
                 packet_to_send = Packet(
                     received_packet.destination_mac,
                     received_packet.source_mac,
@@ -152,14 +172,14 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                     received_packet.payload,
                 )
 
-                print(f"\n[PING] REPLYING TO {received_packet.destination_ip}\n")
+                print(f"\n[PING] REPLYING TO {received_packet.source_ip} ...\n")
                 # packet_to_send.print_packet_information()
 
-                packet_header = packet_to_send.create_packet_header()
-                node.send(bytes(packet_header, "utf-8"))
+                packet_header = packet_to_send.encode_packet()
+                node.send(packet_header)
 
             # LOG
-            elif received_packet.protocol == "1":
+            elif received_packet.protocol == 1:
                 # log message down
 
                 # create logger
@@ -181,24 +201,24 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
 
                 print(f"\n[LOG] data logged successfully.")
 
-            elif received_packet.protocol == "2":
+            elif received_packet.protocol == 2:
                 # terminate node/ disconnect from network
                 print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
                 connected = False
                 node.close()
 
             # SPOOFING
-            elif received_packet.protocol == "3":
+            elif received_packet.protocol == 3:
                 pass
 
             # SNIFFING
-            elif received_packet.protocol == "4":
+            elif received_packet.protocol == 4:
                 pass
 
             # OPEN CAT
-            elif received_packet.protocol == "5":
+            elif received_packet.protocol == 5:
                 pass
 
             # PING REPLY
             else:
-                print(f"\n[PING] REPLY FROM {received_packet.destination_ip} RECEIVED ")
+                print(f"\n[PING] ... REPLY FROM {received_packet.source_ip} RECEIVED ")

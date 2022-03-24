@@ -44,17 +44,22 @@ try:
     while online:
         destination_mac = router_mac
         protocol = choose_protocol()
-        if protocol in [0,1,2]:
-            ip_addr = choose_recipient()
+        if protocol in [0, 1, 2]:
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
                 data = "MY DATA"
             else:
-                data = input("\nEnter a message: ")
-            send_data(node, node_ip, ip_addr, node_mac, destination_mac, protocol, data)
+                data = input("\nEnter message to send: ")
+
+            ip_addr = input("\n Enter IP Address to ping: ")
+            packet_sent = send_data(
+                node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
+            )
         else:
-                print("TBC")
-   
+            print("TBC")
+
+        time.sleep(1)
+
 except OSError as msg:
     node.close()
     print(msg)

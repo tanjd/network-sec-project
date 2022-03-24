@@ -10,15 +10,6 @@ class Packet:
             self.protocol = args[5]
             self.ip_data_length = args[6]
             self.payload = args[7]
-        else:
-            self.source_mac = args[0][0:2]
-            self.destination_mac = args[0][2:4]
-            self.ethernet_data_length = args[0][4:5]
-            self.source_ip = args[0][5:6]
-            self.destination_ip = args[0][6:7]
-            self.protocol = args[0][7:8]
-            self.ip_data_length = args[0][8:9]
-            self.payload = args[0][9:]
 
     def create_packet_header(self):
 
@@ -43,7 +34,7 @@ class Packet:
             "\nSource IP address:       {source_ip}"
             "\nDestination IP address:  {destination_ip}"
             "\nProtocol:                {protocol}"
-            "\nIP Packet Data length:   {data_length}"
+            "\nIP Packet Data length:   {data_length} bytes"
             "\nPayload:                 {payload}".format(
                 source_mac=self.source_mac,
                 destination_mac=self.destination_mac,
@@ -54,14 +45,6 @@ class Packet:
                 data_length=self.ip_data_length,
                 payload=self.payload,
             )
-            # source_mac=self.source_mac.decode('utf-8'),
-            # destination_mac=self.destination_mac.decode('utf-8'),
-            # ethernet_data_length=int.from_bytes(self.ethernet_data_length, byteorder='big'),
-            # source_ip=self.source_ip.hex(),
-            # destination_ip=self.destination_ip.hex(),
-            # protocol=int.from_bytes(self.protocol, byteorder='big'),
-            # data_length=int.from_bytes(self.ip_data_length, byteorder='big'),
-            # payload=self.payload.decode('utf-8'),
         )
 
     def create_forward_packet(self, source_mac, destination_mac):
@@ -75,7 +58,7 @@ class Packet:
             self.destination_ip,
             self.protocol,
             self.ip_data_length,
-            self.payload
+            self.payload,
         )
 
     def print_packet_integrity_status(self, node_mac, node_ip):

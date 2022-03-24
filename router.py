@@ -18,7 +18,6 @@ def handle_client(ip, conn):
                     if node_conn == conn:
                         socket_connections[ip] = None
             connected = False
-
         received_packet = decode_packet(received_message)
         if received_packet:
             # received_packet = Packet(received_packet_header)
