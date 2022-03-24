@@ -5,13 +5,14 @@ from Packet import Packet
 from utility import (
     print_node_information,
     choose_protocol,
-    send_sample_packet,
+    choose_recipient,
+    send_data,
     start_receiver,
 )
 import threading
 
 
-node_ip = "0x3A"
+node_ip = "3a"
 node_mac = "N3"
 
 router_mac = "R2"
@@ -51,36 +52,24 @@ try:
 
     online = True
     while online:
-        print(
-            """\n**************************************
+        destination_mac = router_mac
+        protocol = choose_protocol()
+        if protocol in [0, 1, 2]:
+            answer = input("\nDo you want to send the sample data (y|n): ")
+            if answer == "y":
+                data = "MY DATA"
+            else:
+                data = input("\nEnter message to send: ")
 
-            ACTIONS:
-
-            [1] Configure firewall rules
-            [2] Choose protocol
-            [3] Terminate Node
-            """
-        )
-
-        # check for valid action
-        answer = input("\nPlease select an action: ")
-        if answer == "1":
-            display_firewall_rules(firewall_rules)
-            # set firewall rules
-        answer = input("\nDo you want to send the sample data (y|n): ")
-        if answer == "y":
-            protocol = choose_protocol()
-            destination_mac = router_mac
-            send_sample_packet(
-                node, node_ip, "0x1A", node_mac, destination_mac, protocol
+            ip_addr = input("\n Enter IP Address to ping: ")
+            packet_sent = send_data(
+                node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
             )
+        else:
+            print("TBC")
 
-        if protocol == 3:
-            print("Just listening")
-        if protocol == 4:
-            print("Terminating node")
-            online = False
-            node.close()
+        time.sleep(1)
+
 except OSError as msg:
     node.close()
     print(msg)

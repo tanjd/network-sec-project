@@ -4,14 +4,15 @@ import time
 from Packet import Packet
 from utility import (
     print_node_information,
+    choose_recipient,
     choose_protocol,
-    send_sample_packet,
+    send_data,
     start_receiver,
 )
 import threading
 
 
-node_ip = "0x1A"
+node_ip = "1a"
 node_mac = "N1"
 
 router_mac = "R1"
@@ -41,15 +42,23 @@ try:
 
     online = True
     while online:
-        answer = input("\nDo you want to send the sample data (y|n): ")
-        if answer == "y":
-            protocol = choose_protocol()
-            destination_mac = router_mac
-            send_sample_packet(
-                node, node_ip, "0x2A", node_mac, destination_mac, protocol
-            )
+        destination_mac = router_mac
+        protocol = choose_protocol()
+        if protocol in [0, 1, 2]:
+            answer = input("\nDo you want to send the sample data (y|n): ")
+            if answer == "y":
+                data = "MY DATA"
+            else:
+                data = input("\nEnter message to send: ")
 
-        # do checking of protocol here then call the different protocol methods instead of calling one big method to then split what method to do
+            ip_addr = input("\n Enter IP Address to ping: ")
+            packet_sent = send_data(
+                node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
+            )
+        else:
+            print("TBC")
+
+        time.sleep(1)
 
 except OSError as msg:
     node.close()
