@@ -12,7 +12,7 @@ from utility import (
 import threading
 
 
-node_ip = "0x3A"
+node_ip = "3a"
 node_mac = "N3"
 
 router_mac = "R2"
