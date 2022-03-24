@@ -1,3 +1,4 @@
+import logging
 from Packet import Packet
 
 
@@ -97,6 +98,14 @@ def retrieve_packet(node, node_ip, node_mac):
         received_packet.print_packet_integrity_status(node_mac, node_ip)
     return received_packet
 
+def get_file_name(node_ip):
+    if node_ip == "0x1A":
+        return "node1.log"
+    elif node_ip == "0x2A":
+        return "node2.log"
+    elif node_ip == "0x3A":
+        return "node3.log"
+
 
 def start_receiver(node, node_ip, node_mac, firewall_rules=None):
     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
@@ -148,7 +157,6 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 
                 print(f"\n[LOG] data logged successfully.")
 
-            #KILL
             elif received_packet.protocol == '2':
                 # terminate node/ disconnect from network
                 print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
