@@ -13,12 +13,12 @@ class Packet:
         else:
             self.source_mac = args[0][0:2]
             self.destination_mac = args[0][2:4]
-            self.ethernet_data_length = args[0][4:6]
-            self.source_ip = args[0][6:10]
-            self.destination_ip = args[0][10:14]
-            self.protocol = args[0][14:15]
-            self.ip_data_length = args[0][15:16]
-            self.payload = args[0][16:]
+            self.ethernet_data_length = args[0][4:5]
+            self.source_ip = args[0][5:6]
+            self.destination_ip = args[0][6:7]
+            self.protocol = args[0][7:8]
+            self.ip_data_length = args[0][8:9]
+            self.payload = args[0][9:]
 
     def create_packet_header(self):
 
@@ -54,17 +54,28 @@ class Packet:
                 data_length=self.ip_data_length,
                 payload=self.payload,
             )
+            # source_mac=self.source_mac.decode('utf-8'),
+            # destination_mac=self.destination_mac.decode('utf-8'),
+            # ethernet_data_length=int.from_bytes(self.ethernet_data_length, byteorder='big'),
+            # source_ip=self.source_ip.hex(),
+            # destination_ip=self.destination_ip.hex(),
+            # protocol=int.from_bytes(self.protocol, byteorder='big'),
+            # data_length=int.from_bytes(self.ip_data_length, byteorder='big'),
+            # payload=self.payload.decode('utf-8'),
         )
 
     def create_forward_packet(self, source_mac, destination_mac):
-        ethernet_header = source_mac + destination_mac + self.ethernet_data_length
-        ip_header = self.source_ip + self.destination_ip
-        return (
-            ethernet_header
-            + ip_header
-            + self.protocol
-            + self.ip_data_length
-            + self.payload
+        # ethernet_header = source_mac + destination_mac
+        # ip_header = self.source_ip + self.destination_ip
+        return Packet(
+            source_mac,
+            destination_mac,
+            self.ethernet_data_length,
+            self.source_ip,
+            self.destination_ip,
+            self.protocol,
+            self.ip_data_length,
+            self.payload
         )
 
     def print_packet_integrity_status(self, node_mac, node_ip):
@@ -86,3 +97,16 @@ class Packet:
         if "ALL" in firewall_rules["A"] or self.source_ip in firewall_rules["A"]:
             return True
         return False
+
+    def encode_packet(self):
+        encoded_packet = (
+            bytes(self.source_mac, "utf-8")
+            + bytes(self.destination_mac, "utf-8")
+            + self.ethernet_data_length.to_bytes(1, byteorder="big")
+            + bytes.fromhex(self.source_ip)
+            + bytes.fromhex(self.destination_ip)
+            + self.protocol.to_bytes(1, byteorder="big")
+            + self.ip_data_length.to_bytes(1, byteorder="big")
+            + bytes(self.payload, "utf-8")
+        )
+        return encoded_packet

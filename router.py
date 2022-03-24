@@ -3,7 +3,7 @@ import sys
 import time
 import threading
 from Packet import Packet
-
+from utility import decode_packet
 
 def handle_client(ip, conn):
     print(f"\n[NEW CONNECTION] {ip} - {conn} connected.")
@@ -19,9 +19,9 @@ def handle_client(ip, conn):
                         socket_connections[ip] = None
             connected = False
 
-        received_packet_header = received_message.decode("utf-8")
-        if received_packet_header:
-            received_packet = Packet(received_packet_header)
+        received_packet = decode_packet(received_message)
+        if received_packet:
+            # received_packet = Packet(received_packet_header)
             print("\nThe packet received:")
             received_packet.print_packet_information()
 
@@ -38,7 +38,8 @@ def handle_client(ip, conn):
 
             for sending_conn in sending_connections:
                 try:
-                    sending_conn.send(bytes(packet_header, "utf-8"))
+                    encoded_packet = packet_header.encode_packet()
+                    sending_conn.send(encoded_packet)
                 except ConnectionResetError:
                     print(f"\n {received_packet.destination_ip} is not online.")
                     connected = False
@@ -91,13 +92,13 @@ R2_PORT = 8200
 router1_mac = "R1"
 router2_mac = "R2"
 
-node1_ip = "0x1A"
+node1_ip = "1a"
 node1_mac = "N1"
 
-node2_ip = "0x2A"
+node2_ip = "2a"
 node2_mac = "N2"
 
-node3_ip = "0x3A"
+node3_ip = "3a"
 node3_mac = "N3"
 
 arp_table_mac = {
