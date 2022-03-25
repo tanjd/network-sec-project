@@ -1,20 +1,28 @@
 from Packet import Packet
 
-node_ip = "0x1A"
+node_ip = "1a"
 node_mac = "N1"
 
 router_mac = "R1"
 
 
 source_ip = node_ip
-destination_ip = "0x2A"
+destination_ip = "2a"
 payload = "MY DATA"
-ip_data_length = str(len(payload))
-protocol = "0"
+ip_data_length = len(payload)
+protocol = 0
 source_mac = node_mac
 destination_mac = router_mac
-ip_packet = source_ip + destination_ip + ip_data_length + protocol + payload
-ethernet_data_length = str(len(ip_packet))
+
+
+ethernet_data_length = (
+    len(bytes.fromhex(source_ip))
+    + len(bytes.fromhex(destination_ip))
+    + len(str(protocol))
+    + len(payload)
+    + len(ip_data_length.to_bytes(1, byteorder="big"))
+)
+
 
 packet = Packet(
     source_mac,

@@ -81,8 +81,8 @@ class Packet:
         return False
 
     def check_validity(self, firewall_rules):
-        if "ALL" in firewall_rules["D"] or self.source_ip in firewall_rules["D"]:
+        if "ALL" in firewall_rules["D"] or self.source_ip.hex() in firewall_rules["D"]:
             return False
-        if "ALL" in firewall_rules["A"] or self.source_ip in firewall_rules["A"]:
+        if "ALL" in firewall_rules["A"] or self.source_ip.hex() in firewall_rules["A"]:
             return True
         return False
