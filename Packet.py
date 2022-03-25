@@ -36,7 +36,7 @@ class Packet:
 
     def print_packet_information(self):
         print("\n********************************")
-        print(self.create_packet_header())
+        # print(self.create_packet_header())
         print(
             "\nSource MAC address:      {source_mac}"
             "\nDestination MAC address: {destination_mac}"
@@ -64,17 +64,21 @@ class Packet:
         self.destination_mac = bytes(destination_mac, "utf-8")
 
     def print_packet_integrity_status(self, node_mac, node_ip):
+        mac_check = bytes(node_mac, "utf-8") == self.destination_mac
+        ip_check = bytes.fromhex(node_ip) == self.destination_ip
         print(
             "\nPacket integrity:"
             "\nDestination MAC address matches own MAC address: {mac}".format(
-                mac=(bytes(node_mac, "utf-8") == self.destination_mac)
+                mac=mac_check
             )
         )
         print(
-            "\nDestination IP address matches own IP address: {mac}".format(
-                mac=(bytes.fromhex(node_ip) == self.destination_ip)
-            )
+            "\nDestination IP address matches own IP address: {ip}".format(ip=ip_check)
         )
+
+        if mac_check and ip_check:
+            return True
+        return False
 
     def check_validity(self, firewall_rules):
         if "ALL" in firewall_rules["D"] or self.source_ip in firewall_rules["D"]:

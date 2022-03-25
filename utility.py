@@ -100,8 +100,12 @@ def retrieve_packet(node, node_ip, node_mac):
         received_packet = Packet(received_packet)
         print("\nThe packet received:")
         received_packet.print_packet_information()
-        received_packet.print_packet_integrity_status(node_mac, node_ip)
-    return received_packet
+        integrity_check = received_packet.print_packet_integrity_status(node_mac, node_ip)
+
+        if integrity_check:
+            return received_packet
+        return False
+    return False
 
 
 def get_file_name(node_ip):
@@ -191,3 +195,6 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 print(
                     f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED "
                 )
+        else:
+            print("[Checking] Packet Dropped")
+
