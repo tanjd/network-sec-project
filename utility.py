@@ -37,7 +37,8 @@ def choose_protocol():
     [3] Disconnect recipient [protocol 2]
     [4] IP Spoofing [TBC]
     [5] Sniffing Attack [TBC]
-    [6] Open Cat [TBC]
+    [6] Configure Firewall
+    [7] Open Cat [TBC]
     """
     print(actions)
     response = input("Enter number (1,2,3,4,5,6) of the action you'd like to take: ")
@@ -100,7 +101,9 @@ def retrieve_packet(node, node_ip, node_mac):
         received_packet = Packet(received_packet)
         print("\nThe packet received:")
         received_packet.print_packet_information()
-        integrity_check = received_packet.print_packet_integrity_status(node_mac, node_ip)
+        integrity_check = received_packet.print_packet_integrity_status(
+            node_mac, node_ip
+        )
 
         if integrity_check:
             return received_packet
@@ -115,6 +118,54 @@ def get_file_name(node_ip):
         return "node2.log"
     elif node_ip == "3a":
         return "node3.log"
+
+
+def display_firewall_rules(node_ip, firewall_rules):
+    print("\nCurrent firewall rules: ")
+    print("\tEntry\tSrc IP\tDest IP\tAction")
+    entry = 1
+    for key in firewall_rules.keys():
+        # print(f" {key} : {firewall_rules[key]}")
+        for values in firewall_rules[key]:
+            print(
+                "\t{entry}\t{node_ip}\t{dest_ip}\t{action}".format(
+                    entry=entry, node_ip=node_ip, dest_ip=values, action=key
+                )
+            )
+            entry += 1
+
+def configure_firewall(node_ip, firewall_rules):
+    # firewall_rules = {"A": [], "D": ["ALL"]}
+    display_firewall_rules(node_ip, firewall_rules)
+    configure = True
+    while configure:
+        action = input("\nEnter [1] to add a rule and [2] to delete existing rule: ")
+        src_ip = input("Enter Source IP Address: ")
+        
+        if action == "1": #ADD RULE
+            rule = input("Allow [A] or Deny [D] {ip} ?".format(ip=src_ip))
+
+            if src_ip in firewall_rules[rule]:
+                print("Rule already exists. Please try again")
+            else:
+                #TO DO
+                # firewall_rules[rule].append(src_ip)
+                pass
+        else: #DEL RULE
+            if src_ip not in firewall_rules[rule]:
+                print("Rule does not exist. Please try again")
+            else:
+                #TO DO
+                pass
+
+        print("\nCONFIGURING FIREWALL RULE ... {rule} : {src_ip}".format(rule=rule, src_ip=src_ip))
+        display_firewall_rules(node_ip, firewall_rules)
+
+        x = input("Would you like to configure another firewall rule? (y/n) ")
+        if x == "n":
+            configure = False
+
+    return firewall_rules
 
 
 def start_receiver(node, node_ip, node_mac, firewall_rules=None):
@@ -197,4 +248,3 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 )
         else:
             print("[Checking] Packet Dropped")
-
