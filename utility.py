@@ -122,43 +122,74 @@ def get_file_name(node_ip):
 
 def display_firewall_rules(node_ip, firewall_rules):
     print("\nCurrent firewall rules: ")
-    print("\tEntry\tSrc IP\tDest IP\tAction")
+    print("\tEntry\tIP Address\tAction")
     entry = 1
-    for key in firewall_rules.keys():
-        # print(f" {key} : {firewall_rules[key]}")
-        for values in firewall_rules[key]:
+    for allow_or_deny, ip_addesses in firewall_rules.items():
+        for ip_address in ip_addesses:
             print(
-                "\t{entry}\t{node_ip}\t{dest_ip}\t{action}".format(
-                    entry=entry, node_ip=node_ip, dest_ip=values, action=key
-                )
+                f"\t{entry}\t{ip_address}\t\t{'ALLOW' if allow_or_deny == 'A' else 'DENY'}"
             )
             entry += 1
 
+
+def remove_firewall_rule_by_entry(entry, firewall_rules):
+    index = 1
+    for allow_or_deny, ip_addesses in firewall_rules.items():
+        for ip_address in ip_addesses:
+            if int(entry) == index:
+                firewall_rules = remove_firewall_rule(
+                    allow_or_deny, ip_address, firewall_rules
+                )
+                return firewall_rules
+            index += 1
+    return firewall_rules
+
+
+def add_firewall_rule(allow_or_deny, ip_address, firewall_rules):
+    allow_or_deny = allow_or_deny.upper()
+    if (
+        ip_address.upper() in firewall_rules[allow_or_deny]
+        or ip_address.lower() in firewall_rules[allow_or_deny]
+    ):
+        return firewall_rules
+
+    if ip_address.upper() == "ALL":
+        firewall_rules[allow_or_deny].append(ip_address.upper())
+        return firewall_rules
+
+    firewall_rules[allow_or_deny].append(ip_address.lower())
+    return firewall_rules
+
+
+def remove_firewall_rule(allow_or_deny, ip_address, firewall_rules):
+    allow_or_deny = allow_or_deny.upper()
+
+    if ip_address.upper() in firewall_rules[allow_or_deny]:
+        firewall_rules[allow_or_deny].remove(ip_address.upper())
+        return firewall_rules
+
+    if ip_address.lower() in firewall_rules[allow_or_deny]:
+        firewall_rules[allow_or_deny].remove(ip_address.lower())
+        return firewall_rules
+    return firewall_rules
+
+
 def configure_firewall(node_ip, firewall_rules):
-    # firewall_rules = {"A": [], "D": ["ALL"]}
     display_firewall_rules(node_ip, firewall_rules)
     configure = True
     while configure:
         action = input("\nEnter [1] to add a rule and [2] to delete existing rule: ")
-        src_ip = input("Enter Source IP Address: ")
-        
-        if action == "1": #ADD RULE
-            rule = input("Allow [A] or Deny [D] {ip} ?".format(ip=src_ip))
 
-            if src_ip in firewall_rules[rule]:
-                print("Rule already exists. Please try again")
-            else:
-                #TO DO
-                # firewall_rules[rule].append(src_ip)
-                pass
-        else: #DEL RULE
-            if src_ip not in firewall_rules[rule]:
-                print("Rule does not exist. Please try again")
-            else:
-                #TO DO
-                pass
+        if action == "1":
+            ip_address = input("Enter Source IP Address: ")
+            allow_or_deny = input(f"Allow [A] or Deny [D] {ip_address} ?")
+            firewall_rules = add_firewall_rule(
+                allow_or_deny, ip_address, firewall_rules
+            )
+        else:
+            entry = input("Enter entry to remove: ")
+            firewall_rules = remove_firewall_rule_by_entry(entry, firewall_rules)
 
-        print("\nCONFIGURING FIREWALL RULE ... {rule} : {src_ip}".format(rule=rule, src_ip=src_ip))
         display_firewall_rules(node_ip, firewall_rules)
 
         x = input("Would you like to configure another firewall rule? (y/n) ")
