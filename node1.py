@@ -42,7 +42,9 @@ try:
     while online:
         destination_mac = router_mac
         protocol = choose_protocol()
-        if protocol in [0, 1, 2]:
+        if protocol in [0, 1, 2, 3]:
+            if protocol == 3:
+                node_ip = input("\nEnter IP Address to use for spoofing: ")
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
                 data = "MY DATA"
