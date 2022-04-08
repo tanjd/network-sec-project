@@ -1,4 +1,3 @@
-from platform import node
 from utility import (
     add_firewall_rule,
     configure_firewall,
