@@ -18,26 +18,28 @@ def handle_client(ip, conn):
                 received_packet = Packet(received_packet)
                 received_packet.print_packet_information()
 
-                if received_packet.destination_mac == bytes(router1_mac, "utf-8"):
-                    source_mac = router2_mac
-                    sending_connections = arp_table_socket["r2"].values()
-                else:
-                    source_mac = router1_mac
-                    sending_connections = arp_table_socket["r1"].values()
+                for router_mac, arp_records in arp_table_mac.items():
+                    if received_packet.destination_ip.hex() in arp_records.keys():
+                        source_mac = router_mac
+                        break
 
-                received_packet.create_forward_packet(
-                    source_mac, arp_table_mac[received_packet.destination_ip.hex()]
-                )
+                if received_packet.destination_mac.decode("utf-8") != source_mac:
+                    sending_connections = arp_table_socket[source_mac].values()
 
-                for sending_conn in sending_connections:
-                    try:
-                        packet_header = received_packet.create_packet_header()
-                        sending_conn.sendall(packet_header)
-                    except ConnectionResetError:
-                        print(
-                            f"\n {received_packet.destination_ip.hex()} is not online."
-                        )
-                        connected = False
+                    received_packet.create_forward_packet(
+                        source_mac,
+                        arp_table_mac[source_mac][received_packet.destination_ip.hex()],
+                    )
+
+                    for sending_conn in sending_connections:
+                        try:
+                            packet_header = received_packet.create_packet_header()
+                            sending_conn.sendall(packet_header)
+                        except ConnectionResetError:
+                            print(
+                                f"\n {received_packet.destination_ip.hex()} is not online."
+                            )
+                            connected = False
         except:
             for socket_connections in arp_table_socket.values():
                 for ip, node_conn in socket_connections.items():
@@ -61,30 +63,30 @@ def start_listening(router):
     print(f"listening on {router.getsockname()}\n")
     router.listen()
 
-    while arp_table_socket["r1"][node1_ip] is None and socket_port == R1_PORT:
+    while arp_table_socket[router1_mac][node1_ip] is None and socket_port == R1_PORT:
         conn, addr = router.accept()
-        if arp_table_socket["r1"][node1_ip] is None:
-            arp_table_socket["r1"][node1_ip] = conn
+        if arp_table_socket[router1_mac][node1_ip] is None:
+            arp_table_socket[router1_mac][node1_ip] = conn
             print("Node 1 is online")
 
     while (
-        arp_table_socket["r2"][node2_ip] is None
-        or arp_table_socket["r2"][node3_ip] is None
+        arp_table_socket[router2_mac][node2_ip] is None
+        or arp_table_socket[router2_mac][node3_ip] is None
     ) and socket_port == R2_PORT:
         conn, addr = router.accept()
 
-        if arp_table_socket["r2"][node2_ip] is None:
-            arp_table_socket["r2"][node2_ip] = conn
+        if arp_table_socket[router2_mac][node2_ip] is None:
+            arp_table_socket[router2_mac][node2_ip] = conn
             print("Node 2 is online")
 
-        elif arp_table_socket["r2"][node3_ip] is None:
-            arp_table_socket["r2"][node3_ip] = conn
+        elif arp_table_socket[router2_mac][node3_ip] is None:
+            arp_table_socket[router2_mac][node3_ip] = conn
             print("Node 3 is online")
 
     if socket_port == R1_PORT:
-        router_key = "r1"
+        router_key = router1_mac
     else:
-        router_key = "r2"
+        router_key = router2_mac
     handle_clients(arp_table_socket[router_key])
 
 
@@ -106,16 +108,18 @@ node3_ip = "3a"
 node3_mac = "N3"
 
 arp_table_mac = {
-    node1_ip: node1_mac,
-    node2_ip: node2_mac,
-    node3_ip: node3_mac,
+    router1_mac: {node1_ip: node1_mac},
+    router2_mac: {node2_ip: node2_mac, node3_ip: node3_mac},
 }
 
 node1 = None
 node2 = None
 node3 = None
 
-arp_table_socket = {"r1": {node1_ip: node1}, "r2": {node2_ip: node2, node3_ip: node3}}
+arp_table_socket = {
+    router1_mac: {node1_ip: node1},
+    router2_mac: {node2_ip: node2, node3_ip: node3},
+}
 
 time.sleep(1)
 
