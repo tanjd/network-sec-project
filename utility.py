@@ -218,7 +218,7 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
 
                 is_packet_valid = received_packet.check_validity(firewall_rules)
                 print(
-                    f"\n[Checking] Packet is {'valid' if is_packet_valid else 'invalid'}"
+                    f"\n[Checking] Packet is {'allowed' if is_packet_valid else 'denied'}"
                 )
             if is_packet_valid:
                 connected = manage_protocol(received_packet, node, node_ip, node_mac)
