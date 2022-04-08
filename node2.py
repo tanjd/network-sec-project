@@ -42,16 +42,19 @@ try:
     while online:
         destination_mac = router_mac
         protocol = choose_protocol()
-        if protocol in [0, 1, 2]:
+        if protocol in [0, 1, 2, 3, 4]:
+            if protocol == 3:
+                sender_ip = input("\nEnter IP Address to use for spoofing: ")
+            else:
+                sender_ip = node_ip
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
                 data = "MY DATA"
             else:
                 data = input("\nEnter message to send: ")
-
             ip_addr = input("\n Enter IP Address to ping: ")
             packet_sent = send_data(
-                node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
+                node, sender_ip, ip_addr, node_mac, destination_mac, protocol, data
             )
         else:
             print("TBC")
