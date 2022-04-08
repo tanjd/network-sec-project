@@ -240,16 +240,16 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 logging.basicConfig(
                     level=logging.INFO,
                     format="%(asctime)s :: %(message)s",
-                    filename=get_file_name(received_packet.destination_ip),
+                    filename=get_file_name(received_packet.destination_ip.hex()),
                 )
 
                 # logging.info(received_packet.payload)
                 logging.info(
-                    received_packet.source_ip
+                    received_packet.source_ip.hex()
                     + " - "
-                    + received_packet.destination_ip
+                    + received_packet.destination_ip.hex()
                     + " - "
-                    + received_packet.payload
+                    + received_packet.payload.hex()
                 )
 
                 print("\n[LOG] data logged successfully.")
