@@ -1,11 +1,8 @@
 # from Crypto.PublicKey import RSA
 # from Crypto.Cipher import PKCS1_OAEP
-from hashlib import md5
-
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
-
 
 
 #  pip install pycryptodome
@@ -36,55 +33,58 @@ N7_routing = {
 
 onion_path = ["N4", "N5", "N6"]
 
-data = b"N7hello"  # Structure: Dest Addr + Message
-
-class AESCipher:
-    def __init__(self, key):
-        password = key.encode('utf-8')
-        self.key = md5(password).digest()
-
-    def encrypt(self, data):
-        vector = get_random_bytes(AES.block_size)
-        encryption_cipher = AES.new(self.key, AES.MODE_CBC, vector)
-        return vector + encryption_cipher.encrypt(pad(data,  AES.block_size))
-
-    def decrypt(self, data):
-        file_vector = data[:AES.block_size]
-        decryption_cipher = AES.new(self.key, AES.MODE_CBC, file_vector)
-        return unpad(decryption_cipher.decrypt(data[AES.block_size:]), AES.block_size)
 
 def generate_AES_keys(onion_path):
     for node in onion_path:
         key = get_random_bytes(16)
-        file_out = open("keys/{node}.pem".format(node=node), "a")
-        file_out.write(key)
+        iv = get_random_bytes(16)
+        file_out = open("keys/{node}.bin".format(node=node), "wb")
+        file_out.write(key+iv)
+        # file_out.write(iv)
         file_out.close()
     return
 
-def prepare_onion_packet(onion_path, message):
+
+def decrypt(node, data):
+    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
+    key = key_file[0:16]
+    iv = key_file[16:]
     
-    for n in range(len(onion_path)-1,-1,-1):
-        key = open("keys/N{node}.pem".format(node=n)).read()
-        # iv = get_random_bytes(AES.block_size)
-        encryption_cipher = AES.new(key, AES.MODE_CBC)
-        encrypted_message = encryption_cipher.encrypt(pad(data, AES.block_size))
+
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted_data = unpad(cipher.decrypt(data), AES.block_size)
+    return decrypted_data
+
+
+def prepare_onion_packet(onion_path, message):
+
+    for n in range(len(onion_path) - 1, -1, -1):
+        key_file = open("keys/{node}.bin".format(node=onion_path[n]), "rb").read()
+        key = key_file[0:16]
+        iv = key_file[16:]
+
+        print("\nEncrypting with {n} key ...".format(n=onion_path[n]))
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        encrypted_message = cipher.encrypt(pad(message, AES.block_size))
+        print("encrypted message", encrypted_message)
 
         if n == 0:
-            next_node = n
+            next_node = onion_path[n]
         else:
             next_node = onion_path[n - 1]
-
         message = bytes(next_node, "utf-8") + encrypted_message
+
+        print('next message to encrypt', message)
     encrypted_packet = message
     return encrypted_packet
 
-# generate_AES_keys(onion_path)
 
-def decrypt(node, data):
-    key = open("keys/{node}.pem".format(node=node)).read()
-    cipher = AES.new(key, AES.MODE_CBC)
-    decrypted_data = cipher.decrypt(key)
-    return decrypted_data
+# generate_AES_keys(onion_path)
+encrypted_onion_packet = prepare_onion_packet(onion_path, b'N3hello')
+print('\nFinal Packet ', encrypted_onion_packet)
+print('Number of bytes', len(encrypted_onion_packet))
+
+
 
 
 # https://www.pycryptodome.org/en/latest/src/cipher/oaep.html
@@ -120,7 +120,7 @@ def decrypt(node, data):
 #     for n in range(len(onion_path) - 1, -1, -1):
 #         node = onion_path[n][1]  #'4', '5', '6'
 
-        # key = RSA.importKey(open("public_keys/n{node}.pem".format(node=node)).read())
+# key = RSA.importKey(open("public_keys/n{node}.pem".format(node=node)).read())
 #         cipher = PKCS1_OAEP.new(
 #             key
 #         )  # PKCS1_OAEP integrates padding scheme into RSA encryption. Use public key and OAEP to create cipher
