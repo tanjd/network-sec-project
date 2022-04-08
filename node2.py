@@ -1,13 +1,56 @@
 import socket
 import sys
 import time
+from Packet import Packet
 from utility import (
+    manage_protocol,
     print_node_information,
     choose_protocol,
+    retrieve_packet,
     send_data,
     start_receiver,
 )
 import threading
+
+
+def handle_client(ip, conn):
+    print(f"\n[NEW CONNECTION] {ip} - {conn} connected.")
+    print("[Ready to receiving packets]\n")
+    connected = True
+    while connected:
+        received_packet = retrieve_packet(conn)
+        if received_packet == "DISCONNECT":
+            connected = False
+            conn.close()
+            print("Disconnected")
+            break
+        if received_packet and received_packet.print_packet_integrity_status(
+            node_mac, node_ip
+        ):
+            connected = manage_protocol(received_packet, conn, node_ip, node_mac)
+        else:
+            print("[Checking] Packet Dropped")
+    conn.close()
+
+
+def handle_clients(arp_table_socket):
+    thread = threading.Thread(
+        target=handle_client, args=(node3_ip, arp_table_socket[node3_ip])
+    )
+    thread.start()
+
+
+def start_listening(node_server):
+    global arp_table_socket
+
+    print(f"listening on {node_server.getsockname()}\n")
+    node_server.listen(1)
+    while arp_table_socket[node3_ip] is None:
+        conn, addr = node_server.accept()
+        if arp_table_socket[node3_ip] is None:
+            arp_table_socket[node3_ip] = conn
+            print("Node 3 is online")
+    handle_clients(arp_table_socket)
 
 
 node_ip = "2a"
@@ -19,6 +62,22 @@ HOST = "localhost"
 PORT = 8200
 router = (HOST, PORT)
 node = None
+
+NODE2_PORT = 8500
+node_server = None
+
+node3_ip = "3a"
+node3_mac = "N3"
+
+arp_table_mac = {node3_ip: node3_mac}
+
+node3 = None
+
+arp_table_socket = {
+    "router": node,
+    node3_ip: node3,
+}
+
 time.sleep(1)
 
 print("[STARTING] node 2 is starting...")
@@ -26,10 +85,21 @@ print_node_information(node_ip, node_mac)
 
 try:
     node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    node_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    arp_table_socket["router"] = node
+
 except OSError as msg:
     node = None
+    node_server = None
     print(msg)
 try:
+    node_server.bind((HOST, NODE2_PORT))
+    print("[LISTENING]")
+    listening_thread = threading.Thread(
+        target=start_listening, args=(node_server,), daemon=True
+    )
+    listening_thread.start()
+
     node.connect(router)
     print("[Connecting] Node 2 is connected to router")
     thread = threading.Thread(
