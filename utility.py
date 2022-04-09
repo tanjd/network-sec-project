@@ -1,4 +1,5 @@
 import logging
+import re
 from Packet import Packet
 
 
@@ -97,21 +98,18 @@ def send_data(
     return True
 
 
-def retrieve_packet(node, node_ip, node_mac):
-    received_packet = node.recv(1024)
+def retrieve_packet(node):
+    try:
+        received_packet = node.recv(1024)
+        if received_packet:
+            received_packet = Packet(received_packet)
+            print("\nThe packet received:")
+            received_packet.print_packet_information()
 
-    if received_packet:
-        received_packet = Packet(received_packet)
-        print("\nThe packet received:")
-        received_packet.print_packet_information()
-        integrity_check = received_packet.print_packet_integrity_status(
-            node_mac, node_ip
-        )
-
-        if integrity_check:
             return received_packet
         return False
-    return False
+    except:
+        return "DISCONNECT"
 
 
 def get_file_name(node_ip):
@@ -209,8 +207,16 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
     connected = True
 
     while connected:
-        received_packet = retrieve_packet(node, node_ip, node_mac)
-        if received_packet:
+        received_packet = retrieve_packet(node)
+        if received_packet == "DISCONNECT":
+            connected = False
+            node.close()
+            print("Disconnected")
+            break
+
+        if received_packet and received_packet.print_packet_integrity_status(
+            node_mac, node_ip
+        ):
             is_packet_valid = True
             if firewall_rules:
                 print(f"\n[Checking] firewall rules {firewall_rules}")
@@ -220,67 +226,53 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
                 print(
                     f"\n[Checking] Packet is {'valid' if is_packet_valid else 'invalid'}"
                 )
-
             if is_packet_valid:
-                # PING
-                protocol = int.from_bytes(
-                    received_packet.protocol, byteorder="big")
-                if protocol == 0:
-                    send_data(
-                        node,
-                        node_ip,
-                        received_packet.source_ip.hex(),
-                        node_mac,
-                        received_packet.source_mac.decode("utf-8"),
-                        6,
-                        received_packet.payload.decode("utf-8"),
-                    )
-
-                    print(
-                        f"\n[PING] REPLYING TO {received_packet.source_ip.hex()} ...\n"
-                    )
-
-                # LOG
-                elif protocol == 1:
-                    logging.basicConfig(
-                        level=logging.INFO,
-                        format="%(asctime)s :: %(message)s",
-                        filename=get_file_name(
-                            received_packet.destination_ip.hex()),
-                    )
-
-                    logging.info(
-                        received_packet.source_ip.hex()
-                        + " - "
-                        + received_packet.destination_ip.hex()
-                        + " - "
-                        + received_packet.payload.hex()
-                    )
-
-                    print("\n[LOG] data logged successfully.")
-
-                elif protocol == 2:
-                    print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
-                    connected = False
-                    node.close()
-
-                # SPOOFING
-                elif protocol == 3:
-                    pass
-
-                # SNIFFING
-                elif protocol == 4:
-                    pass
-
-                # OPEN CAT
-                elif protocol == 5:
-                    pass
-
-                # PING REPLY
-                else:
-                    print(
-                        f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED "
-                    )
+                connected = manage_protocol(received_packet, node, node_ip, node_mac)
         else:
             print("[Checking] Packet Dropped")
 
+
+def manage_protocol(received_packet, node, node_ip, node_mac):
+    protocol = int.from_bytes(received_packet.protocol, byteorder="big")
+    # PING
+    if protocol == 0:
+        send_data(
+            node,
+            node_ip,
+            received_packet.source_ip.hex(),
+            node_mac,
+            received_packet.source_mac.decode("utf-8"),
+            6,
+            received_packet.payload.decode("utf-8"),
+        )
+
+        print(f"\n[PING] REPLYING TO {received_packet.source_ip.hex()} ...\n")
+        return True
+
+    # LOG
+    elif protocol == 1:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s :: %(message)s",
+            filename=get_file_name(received_packet.destination_ip.hex()),
+        )
+
+        logging.info(
+            received_packet.source_ip.hex()
+            + " - "
+            + received_packet.destination_ip.hex()
+            + " - "
+            + received_packet.payload.hex()
+        )
+
+        print("\n[LOG] data logged successfully.")
+        return True
+
+    elif protocol == 2:
+        print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
+        node.close()
+        return False
+
+    # PING REPLY
+    else:
+        print(f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED ")
