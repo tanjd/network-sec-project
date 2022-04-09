@@ -3,6 +3,7 @@ import sys
 import time
 from Packet import Packet
 from utility import (
+    broadcast_data,
     manage_protocol,
     print_node_information,
     choose_protocol,
@@ -11,6 +12,8 @@ from utility import (
     start_receiver,
 )
 import threading
+from ctypes import c_int
+from multiprocessing import Value
 
 
 def handle_client(ip, conn):
@@ -19,18 +22,20 @@ def handle_client(ip, conn):
     connected = True
     while connected:
         received_packet = retrieve_packet(conn)
-        if received_packet == "DISCONNECT":
+        if received_packet is False:
+            print(f"{ip} disconnected")
             connected = False
             conn.close()
-            print("Disconnected")
             break
+
         if received_packet and received_packet.print_packet_integrity_status(
             node_mac, node_ip
         ):
-            connected = manage_protocol(received_packet, conn, node_ip, node_mac)
+            connected = manage_protocol(
+                arp_table_socket, received_packet, node_ip, node_mac, online
+            )
         else:
-            print("[Checking] Packet Dropped")
-    conn.close()
+            print("[Checking!] Packet Dropped")
 
 
 def handle_clients(arp_table_socket):
@@ -60,10 +65,11 @@ router_mac = "R2"
 
 HOST = "localhost"
 PORT = 8200
-router = (HOST, PORT)
+ROUTER = (HOST, PORT)
 node = None
 
 NODE2_PORT = 8500
+NODE2 = (HOST, NODE2_PORT)
 node_server = None
 
 node3_ip = "3a"
@@ -93,23 +99,29 @@ except OSError as msg:
     node_server = None
     print(msg)
 try:
-    node_server.bind((HOST, NODE2_PORT))
+    online = Value(c_int, 1)
+    node_server.bind(NODE2)
+
+    node.connect(ROUTER)
+    arp_table_socket["router"] = node
+
     print("[LISTENING]")
     listening_thread = threading.Thread(
         target=start_listening, args=(node_server,), daemon=True
     )
     listening_thread.start()
 
-    node.connect(router)
     print("[Connecting] Node 2 is connected to router")
     thread = threading.Thread(
-        target=start_receiver, args=(node, node_ip, node_mac), daemon=True
+        target=start_receiver,
+        args=(arp_table_socket, node, node_ip, node_mac, online),
+        daemon=True,
     )
     thread.start()
 
-    online = True
+    time.sleep(1)
 
-    while online:
+    while online.value:
         destination_mac = router_mac
         protocol = choose_protocol()
         if protocol in [0, 1, 2]:
@@ -119,9 +131,19 @@ try:
             else:
                 data = input("\nEnter message to send: ")
 
-            ip_addr = input("\n Enter IP Address to ping: ")
-            packet_sent = send_data(
-                node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
+            destination_ip = input("\n Enter IP Address to ping: ")
+            destination_mac = router_mac
+            if destination_ip in arp_table_mac.keys():
+                destination_mac = arp_table_mac[destination_ip]
+
+            broadcast_data(
+                arp_table_socket,
+                node_ip,
+                destination_ip,
+                node_mac,
+                destination_mac,
+                protocol,
+                data,
             )
         else:
             print("TBC")

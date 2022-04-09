@@ -2,7 +2,7 @@ import socket
 import sys
 import time
 import threading
-from Packet import Packet
+from utility import retrieve_packet
 
 
 def handle_client(ip, conn):
@@ -11,21 +11,24 @@ def handle_client(ip, conn):
     connected = True
     while connected:
         try:
-            received_packet = conn.recv(1024)
+            received_packet = retrieve_packet(conn)
+            if received_packet is False:
+                print(f"{ip} disconnected")
+                connected = False
+                conn.close()
+                break
+
             if received_packet:
-                print("\nThe packet received:")
-
-                received_packet = Packet(received_packet)
-                received_packet.print_packet_information()
-
                 for router_mac, arp_records in arp_table_mac.items():
                     if received_packet.destination_ip.hex() in arp_records.keys():
                         source_mac = router_mac
                         break
 
-                if received_packet.destination_mac.decode("utf-8") != source_mac:
+                if (
+                    received_packet.destination_mac.decode("utf-8") == router1_mac
+                    or received_packet.destination_mac.decode("utf-8") == router2_mac
+                ):
                     sending_connections = arp_table_socket[source_mac].values()
-
                     received_packet.create_forward_packet(
                         source_mac,
                         arp_table_mac[source_mac][received_packet.destination_ip.hex()],
@@ -39,7 +42,7 @@ def handle_client(ip, conn):
                             print(
                                 f"\n {received_packet.destination_ip.hex()} is not online."
                             )
-                            connected = False
+                            sending_conn.close()
         except:
             for socket_connections in arp_table_socket.values():
                 for ip, node_conn in socket_connections.items():
@@ -148,6 +151,7 @@ try:
         thread = threading.Thread(target=start_listening, args=(router,), daemon=True)
         thread.start()
 
+    time.sleep(1)
     online = True
     while online:
         answer = input("\nDo you want to terminate router? ")

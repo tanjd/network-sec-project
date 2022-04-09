@@ -8,6 +8,8 @@ from utility import (
     start_receiver,
 )
 import threading
+from ctypes import c_int
+from multiprocessing import Value
 
 
 node_ip = "1a"
@@ -20,6 +22,9 @@ PORT = 8100
 router = (HOST, PORT)
 node = None
 
+arp_table_mac = {}
+arp_table_socket = {"router": node}
+
 time.sleep(1)
 
 print("[STARTING] node 1 is starting...")
@@ -31,15 +36,21 @@ except OSError as msg:
     node = None
     print(msg)
 try:
+    online = Value(c_int, 1)
     node.connect(router)
+    arp_table_socket["router"] = node
+
     print("[Connecting] Node 1 is connected to router")
     thread = threading.Thread(
-        target=start_receiver, args=(node, node_ip, node_mac), daemon=True
+        target=start_receiver,
+        args=(arp_table_socket, node, node_ip, node_mac, online),
+        daemon=True,
     )
     thread.start()
 
-    online = True
-    while online:
+    time.sleep(1)
+
+    while online.value:
         destination_mac = router_mac
         protocol = choose_protocol()
         if protocol in [0, 1, 2]:
@@ -50,14 +61,18 @@ try:
                 data = input("\nEnter message to send: ")
 
             ip_addr = input("\n Enter IP Address to ping: ")
-            packet_sent = send_data(
-                node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
-            )
+
+            try:
+                send_data(
+                    node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
+                )
+            except ConnectionError:
+                online = False
+
         else:
             print("TBC")
 
         time.sleep(1)
-
 except OSError as msg:
     node.close()
     print(msg)
