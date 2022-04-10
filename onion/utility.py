@@ -102,6 +102,7 @@ def handle_client(ip, conn, is_router):
                     # print packet
                     # decode packet
                     # retrieve next destination_ip
+                    # create new packet
                     # broadcast new packet with new destination_ip
         except ConnectionError:
             return False
@@ -151,3 +152,20 @@ def connect_to_node(node_ip, ip_address):
         print("could not open socket")
         return False
     return NODE
+
+
+def broadcast_data(arp_table_socket_client, packet_header):
+    is_success = True
+    for socket_conn in arp_table_socket_client.values():
+        send_data(socket_conn, packet_header)
+        if not send_data:
+            is_success = False
+    return is_success
+
+
+def send_data(socket_conn, packet_header):
+    try:
+        socket_conn.sendall(packet_header)
+        return True
+    except ConnectionError:
+        return False
