@@ -12,6 +12,9 @@ from utility import (
     arp_table_mac,
     ip_address_port_dict,
     arp_table_socket_client,
+    generate_onion_path,
+    generate_keys,
+    prepare_onion_packet
 )
 
 
@@ -76,14 +79,42 @@ try:
     time.sleep(1)
     online = True
     while online:
-        answer = input(f"\nDo you want to terminate node {node_index}? ")
+        print(f"\nEnter 'y' anytime to terminate node {node_index} ")
+        answer = input("""\n
+                    ********************
+                    
+                    CLIENTS:
+
+                    N2
+                    N3
+                    N4
+                    N5
+
+                    ********************
+
+                    Choose a node to send to:
+                    """)
         if answer == "y":
             online = False
             NODE_SOCKET.close()
             print(f"\nTerminating node {node_index}\n")
+        else:
+            message = input("\n Enter a message: ")
+            time.sleep(.5)
+            print("\n Creating random path of onion nodes...")
+            path = generate_onion_path(node_ip, answer)
+            time.sleep(.5)
+            print("\n Creating keys ...")
+            generate_keys(path)
+            time.sleep(.5)
+            print("\n Preparing packet ...")
+            encrypted_packet = prepare_onion_packet(path, message)
+            print('\nEncrypted_packet"', encrypted_packet, 'length', len(encrypted_packet))
+
+
 except OSError as msg:
     NODE_SOCKET.close()
-    print(msg)
+    # print(msg)
     NODE_SOCKET = None
 if NODE_SOCKET is None:
     print("could not open socket")

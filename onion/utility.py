@@ -92,7 +92,7 @@ def generate_keys(path):
     return
 
 def prepare_onion_packet(path, message):
-
+    message = bytes(message, 'utf-8')
     for n in range(len(path) - 1, -1, -1):
         key_file = open("keys/{node}.bin".format(node=path[n]), "rb").read()
         key = key_file[0:16]
@@ -101,9 +101,9 @@ def prepare_onion_packet(path, message):
         print("\nEncrypting with {n} key ...".format(n=path[n]))
         cipher = AES.new(key, AES.MODE_CBC, iv)
         encrypted_message = cipher.encrypt(pad(message, AES.block_size))
-        print(
-            "encrypted message", encrypted_message, " length ", len(encrypted_message)
-        )
+        # print(
+        #     "encrypted message", encrypted_message, " length ", len(encrypted_message)
+        # )
 
         if n != 0:
             next_node = path[n - 1]
