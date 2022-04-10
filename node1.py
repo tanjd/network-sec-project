@@ -1,12 +1,7 @@
 import socket
 import sys
 import time
-from utility import (
-    print_node_information,
-    choose_protocol,
-    send_data,
-    start_receiver
-)
+from utility import print_node_information, choose_protocol, send_data, start_receiver
 import threading
 from ctypes import c_int
 from multiprocessing import Value

@@ -12,12 +12,11 @@ from utility import (
     start_receiver,
     set_sniffing_configuration,
     log_sniffed_packet,
-    set_sniffing_to_off
+    set_sniffing_to_off,
 )
 import threading
 from ctypes import c_int
 from multiprocessing import Value
-
 
 
 def handle_client(ip, conn):
@@ -41,15 +40,20 @@ def handle_client(ip, conn):
             conn.close()
             break
 
-        if received_packet and not sniffing_mode and received_packet.print_packet_integrity_status(
-            node_mac, node_ip
+        if (
+            received_packet
+            and not sniffing_mode
+            and received_packet.print_packet_integrity_status(node_mac, node_ip)
         ):
             connected = manage_protocol(
                 arp_table_socket, received_packet, node_ip, node_mac, online
             )
         elif sniffing_mode:
-            if (received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac) or received_packet.print_packet_integrity_status(node_mac, node_ip):
-                    log_sniffed_packet(received_packet)
+            if (
+                received_packet.source_ip.hex() == node_ip
+                and received_packet.source_mac.decode("utf-8") == node_mac
+            ) or received_packet.print_packet_integrity_status(node_mac, node_ip):
+                log_sniffed_packet(received_packet)
         else:
             print("[Checking!] Packet Dropped")
 
@@ -185,19 +189,17 @@ try:
                 original_mac = node_mac
                 print(f"\n[Sniffing] Node 2 is sniffing {sniffing_ip}")
                 thread = threading.Thread(
-                target=set_sniffing_configuration,
-                args=(sniffing_ip,
-                      sniffing_mac),
-                daemon=True,
-            )
+                    target=set_sniffing_configuration,
+                    args=(sniffing_ip, sniffing_mac),
+                    daemon=True,
+                )
                 thread.start()
             elif sniffing_mode == True:
                 thread = threading.Thread(
-                target=set_sniffing_to_off,
-                args=(original_ip,
-                      original_mac),
-                daemon=True,
-            )
+                    target=set_sniffing_to_off,
+                    args=(original_ip, original_mac),
+                    daemon=True,
+                )
                 thread.start()
                 sniffing_mode = False
         else:

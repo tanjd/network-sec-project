@@ -7,8 +7,7 @@ def print_node_information(node_ip, node_mac):
     print(
         "\n*******************************"
         "\nNode IP address:     {node_ip}"
-        "\nNode MAC address:    {node_mac}".format(
-            node_ip=node_ip, node_mac=node_mac)
+        "\nNode MAC address:    {node_mac}".format(node_ip=node_ip, node_mac=node_mac)
     )
 
 
@@ -43,8 +42,7 @@ def choose_protocol():
     [7] Open Cat [TBC]
     """
     print(actions)
-    response = input(
-        "Enter number (1,2,3,4,5,6) of the action you'd like to take: ")
+    response = input("Enter number (1,2,3,4,5,6) of the action you'd like to take: ")
 
     valid = False
     while not valid:
@@ -56,8 +54,7 @@ def choose_protocol():
         else:
             protocol = int(response) - 1
             if protocol not in [0, 1, 2, 3, 4, 5]:
-                response = input(
-                    "Invalid action. Please enter a number between 1-6: ")
+                response = input("Invalid action. Please enter a number between 1-6: ")
             else:
                 valid = True
     return protocol
@@ -199,8 +196,7 @@ def configure_firewall(firewall_rules):
     display_firewall_rules(firewall_rules)
     configure = True
     while configure:
-        action = input(
-            "\nEnter [1] to add a rule and [2] to delete existing rule: ")
+        action = input("\nEnter [1] to add a rule and [2] to delete existing rule: ")
 
         if action == "1":
             ip_address = input("Enter Source IP Address: ")
@@ -210,8 +206,7 @@ def configure_firewall(firewall_rules):
             )
         else:
             entry = input("Enter entry to remove: ")
-            firewall_rules = remove_firewall_rule_by_entry(
-                entry, firewall_rules)
+            firewall_rules = remove_firewall_rule_by_entry(entry, firewall_rules)
 
         display_firewall_rules(firewall_rules)
 
@@ -274,15 +269,16 @@ def start_receiver(
             conn.close()
             break
 
-        if received_packet and not sniffing_mode and received_packet.print_packet_integrity_status(
-            node_mac, node_ip
+        if (
+            received_packet
+            and not sniffing_mode
+            and received_packet.print_packet_integrity_status(node_mac, node_ip)
         ):
             is_packet_valid = True
             if firewall_rules:
                 print(f"\n[Checking] firewall rules {firewall_rules}")
 
-                is_packet_valid = received_packet.check_validity(
-                    firewall_rules)
+                is_packet_valid = received_packet.check_validity(firewall_rules)
                 print(
                     f"\n[Checking] Packet is {'allowed' if is_packet_valid else 'denied'}"
                 )
@@ -291,8 +287,10 @@ def start_receiver(
                     arp_table_socket, received_packet, node_ip, node_mac, online
                 )
         elif sniffing_mode:
-            if (received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac) or received_packet.print_packet_integrity_status(
-                    node_mac, node_ip):
+            if (
+                received_packet.source_ip.hex() == node_ip
+                and received_packet.source_mac.decode("utf-8") == node_mac
+            ) or received_packet.print_packet_integrity_status(node_mac, node_ip):
                 log_sniffed_packet(received_packet)
         else:
             print("[Checking] Packet Dropped")
@@ -338,8 +336,7 @@ def manage_protocol(arp_table_socket, received_packet, node_ip, node_mac, online
         online.value = 0
         return False
     else:
-        print(
-            f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED ")
+        print(f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED ")
 
         return True
 
@@ -348,7 +345,7 @@ def log_sniffed_packet(received_packet):
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s :: %(message)s",
-        filename='network_logs.log',
+        filename="network_logs.log",
     )
 
     logging.info(
