@@ -48,8 +48,8 @@ def handle_client(ip, conn):
                 arp_table_socket, received_packet, node_ip, node_mac, online
             )
         elif sniffing_mode:
-            if received_packet.print_packet_integrity_status(node_mac, node_ip) or (received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac):
-                log_sniffed_packet(received_packet)
+            if (received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac) or received_packet.print_packet_integrity_status(node_mac, node_ip):
+                    log_sniffed_packet(received_packet)
         else:
             print("[Checking!] Packet Dropped")
 
