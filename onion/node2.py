@@ -4,6 +4,7 @@ import time
 import threading
 from utility import (
     HOST,
+    broadcast_data,
     connect_to_router,
     arp_table_socket,
     handle_clients,
@@ -11,7 +12,7 @@ from utility import (
     get_ip_address,
     arp_table_mac,
     ip_address_port_dict,
-    arp_table_socket_client,
+    arp_table_socket_client,    
     generate_onion_path,
     generate_keys,
     prepare_onion_packet
@@ -34,7 +35,7 @@ def start_listening(socket_conn):
                 break
 
     print(arp_table_socket)
-    handle_clients(arp_table_socket, True)
+    handle_clients(arp_table_socket, False)
 
 
 node_index = 2
@@ -79,16 +80,17 @@ try:
     time.sleep(1)
     online = True
     while online:
+        time.sleep(2)
         print(f"\nEnter 'y' anytime to terminate node {node_index} ")
         answer = input("""\n
                     ********************
                     
                     CLIENTS:
 
-                    N2
-                    N3
-                    N4
-                    N5
+                    1a
+                    3a
+                    4a
+                    5a
 
                     ********************
 
@@ -109,7 +111,13 @@ try:
             time.sleep(.5)
             print("\n Preparing packet ...")
             encrypted_packet = prepare_onion_packet(path, message)
-            print('\nEncrypted_packet"', encrypted_packet, 'length', len(encrypted_packet))
+            print('\nEncrypted_packet\t', encrypted_packet)
+            print('\nPacket length\t', len(encrypted_packet))
+            print('\n Sending data ...')
+            packet_to_send = bytes(answer, 'utf-8') + encrypted_packet
+            arp_table_socket_client.pop(node_ip)
+            broadcast_data(arp_table_socket_client, packet_to_send)
+
 except OSError as msg:
     NODE_SOCKET.close()
     # print(msg)
