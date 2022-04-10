@@ -87,7 +87,11 @@ try:
 
     while online.value:
         protocol = choose_protocol()
-        if protocol in [0, 1, 2]:
+        if protocol in [0, 1, 2, 3, 4]:
+            if protocol == 3:
+                sender_ip = input("\nEnter IP Address to use for spoofing: ")
+            else:
+                sender_ip = node_ip
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
                 data = "MY DATA"
