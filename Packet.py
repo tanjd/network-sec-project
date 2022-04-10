@@ -21,7 +21,6 @@ class Packet:
             self.payload = received_packet[9:]
 
     def create_packet_header(self):
-
         ethernet_header = (
             self.source_mac + self.destination_mac + self.ethernet_data_length
         )

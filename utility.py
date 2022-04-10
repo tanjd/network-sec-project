@@ -64,6 +64,27 @@ def choose_protocol():
     return protocol
 
 
+def broadcast_data(
+    arp_table_socket,
+    source_ip,
+    destination_ip,
+    source_mac,
+    destination_mac,
+    protocol,
+    payload,
+):
+    for socket_conn in arp_table_socket.values():
+        send_data(
+            socket_conn,
+            source_ip,
+            destination_ip,
+            source_mac,
+            destination_mac,
+            protocol,
+            payload,
+        )
+
+
 def send_data(
     node, source_ip, destination_ip, source_mac, destination_mac, protocol, payload
 ):
@@ -92,11 +113,11 @@ def send_data(
 
     packet.print_packet_information()
     packet_header = packet.create_packet_header()
-
-    # do a try catch (return True on success and False on failure)
-
-    node.sendall(packet_header)
-    return True
+    try:
+        node.sendall(packet_header)
+        return True
+    except:
+        raise ConnectionError
 
 
 def retrieve_packet(node):
@@ -106,11 +127,10 @@ def retrieve_packet(node):
             received_packet = Packet(received_packet)
             print("\nThe packet received:")
             received_packet.print_packet_information()
-
             return received_packet
         return False
     except:
-        return "DISCONNECT"
+        return False
 
 
 def get_file_name(node_ip):
@@ -122,7 +142,7 @@ def get_file_name(node_ip):
         return "node3.log"
 
 
-def display_firewall_rules(node_ip, firewall_rules):
+def display_firewall_rules(firewall_rules):
     print("\nCurrent firewall rules: ")
     print("\tEntry\tIP Address\tAction")
     entry = 1
@@ -176,8 +196,8 @@ def remove_firewall_rule(allow_or_deny, ip_address, firewall_rules):
     return firewall_rules
 
 
-def configure_firewall(node_ip, firewall_rules):
-    display_firewall_rules(node_ip, firewall_rules)
+def configure_firewall(firewall_rules):
+    display_firewall_rules(firewall_rules)
     configure = True
     while configure:
         action = input(
@@ -194,7 +214,7 @@ def configure_firewall(node_ip, firewall_rules):
             firewall_rules = remove_firewall_rule_by_entry(
                 entry, firewall_rules)
 
-        display_firewall_rules(node_ip, firewall_rules)
+        display_firewall_rules(firewall_rules)
 
         x = input("Would you like to configure another firewall rule? (y/n) ")
         if x == "n":
@@ -203,8 +223,10 @@ def configure_firewall(node_ip, firewall_rules):
     return firewall_rules
 
 
-def start_receiver(node, node_ip, node_mac, firewall_rules=None, sniffing_mode=None):
-    print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
+def start_receiver(
+    arp_table_socket, conn, node_ip, node_mac, online, firewall_rules=None
+):
+    print(f"[Receiving] {node_ip}-{node_mac} is receiving from {conn}")
     connected = True
     global sniffing_ip
 
@@ -212,11 +234,11 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None, sniffing_mode=N
     if sniffing_mode:
         sniffing_ip = sniffing_mode
     while connected:
-        received_packet = retrieve_packet(node)
-        if received_packet == "DISCONNECT":
+        received_packet = retrieve_packet(conn)
+        if received_packet is False:
+            print(f"{node_ip} disconnected")
             connected = False
-            node.close()
-            print("Disconnected")
+            conn.close()
             break
 
         if received_packet and received_packet.print_packet_integrity_status(
@@ -234,20 +256,21 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None, sniffing_mode=N
                 is_packet_valid = received_packet.check_validity(
                     firewall_rules)
                 print(
-                    f"\n[Checking] Packet is {'valid' if is_packet_valid else 'invalid'}"
+                    f"\n[Checking] Packet is {'allowed' if is_packet_valid else 'denied'}"
                 )
             if is_packet_valid:
-                connected = manage_protocol(received_packet, node, node_ip, node_mac)
+                connected = manage_protocol(
+                    arp_table_socket, received_packet, node_ip, node_mac, online
+                )
         else:
             print("[Checking] Packet Dropped")
 
 
-def manage_protocol(received_packet, node, node_ip, node_mac):
+def manage_protocol(arp_table_socket, received_packet, node_ip, node_mac, online):
     protocol = int.from_bytes(received_packet.protocol, byteorder="big")
-    # PING
     if protocol == 0:
-        send_data(
-            node,
+        broadcast_data(
+            arp_table_socket,
             node_ip,
             received_packet.source_ip.hex(),
             node_mac,
@@ -258,8 +281,6 @@ def manage_protocol(received_packet, node, node_ip, node_mac):
 
         print(f"\n[PING] REPLYING TO {received_packet.source_ip.hex()} ...\n")
         return True
-
-    # LOG
     elif protocol == 1:
         logging.basicConfig(
             level=logging.INFO,
@@ -272,7 +293,7 @@ def manage_protocol(received_packet, node, node_ip, node_mac):
             + " - "
             + received_packet.destination_ip.hex()
             + " - "
-            + received_packet.payload.hex()
+            + received_packet.payload.decode("utf-8")
         )
 
         print("\n[LOG] data logged successfully.")
@@ -280,13 +301,14 @@ def manage_protocol(received_packet, node, node_ip, node_mac):
 
     elif protocol == 2:
         print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
-        node.close()
+        for socket_conn in arp_table_socket.values():
+            socket_conn.close()
+        online.value = 0
         return False
-
-    # PING REPLY
     else:
         print(f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED ")
 
+        return True
 def log_sniffed_packet(received_packet):
     logging.basicConfig(
                     level=logging.INFO,
