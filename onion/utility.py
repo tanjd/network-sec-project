@@ -71,6 +71,23 @@ ip_address_port_dict = {
     node5_ip: N5_PORT,
 }
 
+def broadcast_data(arp_table_socket_client, packet_header):
+    is_success = True
+    for socket_conn in arp_table_socket_client.values():
+        send_data(socket_conn, packet_header)
+        if not send_data:
+            is_success = False
+    return is_success
+
+
+def send_data(socket_conn, packet_header):
+    try:
+        socket_conn.sendall(packet_header)
+        return True
+    except ConnectionError:
+        return False
+
+
 def generate_onion_path(src, dest):
     ip_dict = copy.deepcopy(ip_address_port_dict)
     ip_dict.pop(src)
@@ -101,9 +118,7 @@ def prepare_onion_packet(path, message):
         print("\nEncrypting with {n} key ...".format(n=path[n]))
         cipher = AES.new(key, AES.MODE_CBC, iv)
         encrypted_message = cipher.encrypt(pad(message, AES.block_size))
-        # print(
-        #     "encrypted message", encrypted_message, " length ", len(encrypted_message)
-        # )
+ 
 
         if n != 0:
             next_node = path[n - 1]
@@ -113,6 +128,16 @@ def prepare_onion_packet(path, message):
         # print('next message to encrypt', message)
     encrypted_packet = message
     return encrypted_packet
+
+def decrypt(data, node): #data does NOT include next hop addr
+    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
+    key = key_file[0:16]
+    iv = key_file[16:]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(data)
+    print('decrypted', decrypted, 'length of decrypted', len(decrypted))
+    unpadded_packet = unpad(decrypted, AES.block_size)
+    return (unpadded_packet[0:2], unpadded_packet[2:])  # Returns (Next Addr, Msg)
 
 def get_ip_address(node_index):
     if node_index == 1:
@@ -146,15 +171,20 @@ def handle_client(ip, conn, is_router):
                 if is_router:
                     print("Received", repr(data))
                 else:
-                    print("Received node data: ", repr(data))
-                    # print packet
-                    # decode packet
-                    # retrieve next destination_ip
-                    # create new packet
-                    # broadcast new packet with new destination_ip
+                    if data[0:2].decode('utf-8') in list(ip_address_port_dict):
+                        current_node_ip = data[0:2].decode('utf-8')
+                        encrypted_packet = data[2:]
+                        next_addr, decrypted_data = decrypt(encrypted_packet, current_node_ip)
+                        print('Next onion node\t', next_addr)
+                        print('Decrypted_data\t', decrypted_data)
+                        print("Length of decrypted data\t", len(decrypted_data))
+                        packet_to_send = next_addr + decrypted_data
+                        broadcast_data(arp_table_socket_client, packet_to_send)
+                    else:
+                        print("\nReceived message:\t", repr(data))          
+
         except ConnectionError:
             return False
-
 
 def connect_to_router():
     try:
@@ -202,26 +232,5 @@ def connect_to_node(node_ip, ip_address):
     return NODE
 
 
-def broadcast_data(arp_table_socket_client, packet_header):
-    is_success = True
-    for socket_conn in arp_table_socket_client.values():
-        send_data(socket_conn, packet_header)
-        if not send_data:
-            is_success = False
-    return is_success
 
 
-def send_data(socket_conn, packet_header):
-    try:
-        socket_conn.sendall(packet_header)
-        return True
-    except ConnectionError:
-        return False
-def decrypt(data, node):
-    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
-    key = key_file[0:16]
-    iv = key_file[16:]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted = cipher.decrypt(data)
-    unpadded = unpad(decrypted, AES.block_size)
-    return (unpadded[0:2], unpadded[2:])  # Returns (Next Addr, Msg)
