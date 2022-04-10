@@ -2,6 +2,7 @@ import logging
 import re
 from Packet import Packet
 
+sniffing_ip = None
 
 def print_node_information(node_ip, node_mac):
     print(
@@ -202,10 +203,14 @@ def configure_firewall(node_ip, firewall_rules):
     return firewall_rules
 
 
-def start_receiver(node, node_ip, node_mac, firewall_rules=None):
+def start_receiver(node, node_ip, node_mac, firewall_rules=None, sniffing_mode=None):
     print(f"[Receiving] {node_ip}-{node_mac} is connected to router")
     connected = True
+    global sniffing_ip
 
+    print(f"sniffing mode: {sniffing_mode}")
+    if sniffing_mode:
+        sniffing_ip = sniffing_mode
     while connected:
         received_packet = retrieve_packet(node)
         if received_packet == "DISCONNECT":
@@ -218,6 +223,11 @@ def start_receiver(node, node_ip, node_mac, firewall_rules=None):
             node_mac, node_ip
         ):
             is_packet_valid = True
+            print(f"sniffing mode 222: {sniffing_mode}")
+            print(f"{sniffing_ip}: {received_packet.destination_ip.hex()} : {received_packet.source_ip.hex()}")
+            if sniffing_ip == received_packet.destination_ip.hex() or sniffing_ip == received_packet.source_ip.hex():
+                print("sniffing mode is on")
+                log_sniffed_packet(received_packet)
             if firewall_rules:
                 print(f"\n[Checking] firewall rules {firewall_rules}")
 
@@ -276,3 +286,19 @@ def manage_protocol(received_packet, node, node_ip, node_mac):
     # PING REPLY
     else:
         print(f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED ")
+
+def log_sniffed_packet(received_packet):
+    logging.basicConfig(
+                    level=logging.INFO,
+                    format="%(asctime)s :: %(message)s",
+                    filename='network_logs.log',
+                )
+
+    logging.info(
+                    received_packet.source_ip.hex()
+                    + " - "
+                    + received_packet.destination_ip.hex()
+                    + " - "
+                    + received_packet.payload.hex()
+                )
+    print("\n[LOG] sniffed packets are logged.")
