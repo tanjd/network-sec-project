@@ -5,7 +5,7 @@ from utility import (
     print_node_information,
     choose_protocol,
     send_data,
-    start_receiver,
+    start_receiver
 )
 import threading
 from ctypes import c_int
@@ -55,26 +55,27 @@ try:
         protocol = choose_protocol()
         if protocol in [0, 1, 2, 3]:
             if protocol == 3:
-                node_ip = input("\nEnter IP Address to use for spoofing: ")
+                sender_ip = input("\nEnter IP Address to use for spoofing: ")
+            else:
+                sender_ip = node_ip
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
                 data = "MY DATA"
             else:
                 data = input("\nEnter message to send: ")
-
             ip_addr = input("\n Enter IP Address to ping: ")
 
             try:
                 send_data(
-                    node, node_ip, ip_addr, node_mac, destination_mac, protocol, data
+                    node, sender_ip, ip_addr, node_mac, destination_mac, protocol, data
                 )
             except ConnectionError:
                 online = False
-
         else:
             print("TBC")
 
         time.sleep(1)
+
 except OSError as msg:
     node.close()
     print(msg)

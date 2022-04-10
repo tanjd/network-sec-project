@@ -10,30 +10,46 @@ from utility import (
     retrieve_packet,
     send_data,
     start_receiver,
+    set_sniffing_configuration,
+    log_sniffed_packet,
+    set_sniffing_to_off
 )
 import threading
 from ctypes import c_int
 from multiprocessing import Value
 
 
+
 def handle_client(ip, conn):
     print(f"\n[NEW CONNECTION] {ip} - {conn} connected.")
     print("[Ready to receiving packets]\n")
+
+    global node_mac
+    global node_ip
+
     connected = True
     while connected:
         received_packet = retrieve_packet(conn)
+        if sniffing_mode:
+            print("sniffing mode activated")
+            node_ip = sniffing_ip
+            node_mac = sniffing_mac
+
         if received_packet is False:
             print(f"{ip} disconnected")
             connected = False
             conn.close()
             break
 
-        if received_packet and received_packet.print_packet_integrity_status(
+        if received_packet and not sniffing_mode and received_packet.print_packet_integrity_status(
             node_mac, node_ip
         ):
             connected = manage_protocol(
                 arp_table_socket, received_packet, node_ip, node_mac, online
             )
+        elif sniffing_mode:
+            if received_packet.print_packet_integrity_status(node_mac, node_ip) or (received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac):
+                log_sniffed_packet(received_packet)
         else:
             print("[Checking!] Packet Dropped")
 
@@ -84,6 +100,13 @@ arp_table_socket = {
     node3_ip: node3,
 }
 
+sniffing_mode = False
+sniffing_ip = None
+sniffing_mac = None
+
+original_ip = None
+original_mac = None
+
 time.sleep(1)
 
 print("[STARTING] node 2 is starting...")
@@ -124,7 +147,7 @@ try:
     while online.value:
         destination_mac = router_mac
         protocol = choose_protocol()
-        if protocol in [0, 1, 2, 3, 4]:
+        if protocol in [0, 1, 2, 3]:
             if protocol == 3:
                 sender_ip = input("\nEnter IP Address to use for spoofing: ")
             else:
@@ -149,6 +172,30 @@ try:
                 protocol,
                 data,
             )
+        elif protocol in [4]:
+            if sniffing_mode == False:
+                sniffing_ip = input("\nEnter IP Address to use for sniffing: ")
+                sniffing_mac = input("\nEnter MAC Address to use for sniffing: ")
+                sniffing_mode = True
+                original_ip = node_ip
+                original_mac = node_mac
+                print(f"\n[Sniffing] Node 2 is sniffing {sniffing_ip}")
+                thread = threading.Thread(
+                target=set_sniffing_configuration,
+                args=(sniffing_ip,
+                      sniffing_mac),
+                daemon=True,
+            )
+                thread.start()
+            elif sniffing_mode == True:
+                thread = threading.Thread(
+                target=set_sniffing_to_off,
+                args=(original_ip,
+                      original_mac),
+                daemon=True,
+            )
+                thread.start()
+                sniffing_mode = False
         else:
             print("TBC")
 
