@@ -2,6 +2,12 @@ import socket
 import sys
 import time
 import threading
+import random
+import copy
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad, unpad
+from pathlib import Path
 
 HOST = "localhost"
 
@@ -65,6 +71,48 @@ ip_address_port_dict = {
     node5_ip: N5_PORT,
 }
 
+def generate_onion_path(src, dest):
+    ip_dict = copy.deepcopy(ip_address_port_dict)
+    ip_dict.pop(src)
+    ip_dict.pop(dest)
+    order = random.sample(range(3), 3)
+    ip_list = list(ip_dict)
+    onion_path = [ip_list[order[0]], ip_list[order[1]],ip_list[order[2]]]
+    return onion_path
+
+def generate_keys(path):
+    for node in path:
+        key = get_random_bytes(16)
+        iv = get_random_bytes(16)
+        public_dir = Path("keys")
+        public_dir.mkdir(exist_ok=True)
+        file_out = open("keys/{node}.bin".format(node=node), "wb")
+        file_out.write(key + iv)
+        file_out.close()
+    return
+
+def prepare_onion_packet(path, message):
+
+    for n in range(len(path) - 1, -1, -1):
+        key_file = open("keys/{node}.bin".format(node=path[n]), "rb").read()
+        key = key_file[0:16]
+        iv = key_file[16:]
+        # print('current msg: ', message, ' length ', len(message))
+        print("\nEncrypting with {n} key ...".format(n=path[n]))
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        encrypted_message = cipher.encrypt(pad(message, AES.block_size))
+        print(
+            "encrypted message", encrypted_message, " length ", len(encrypted_message)
+        )
+
+        if n != 0:
+            next_node = path[n - 1]
+            message = bytes(next_node, "utf-8") + encrypted_message
+        else:
+            message = encrypted_message
+        # print('next message to encrypt', message)
+    encrypted_packet = message
+    return encrypted_packet
 
 def get_ip_address(node_index):
     if node_index == 1:
@@ -169,3 +217,11 @@ def send_data(socket_conn, packet_header):
         return True
     except ConnectionError:
         return False
+def decrypt(data, node):
+    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
+    key = key_file[0:16]
+    iv = key_file[16:]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(data)
+    unpadded = unpad(decrypted, AES.block_size)
+    return (unpadded[0:2], unpadded[2:])  # Returns (Next Addr, Msg)
