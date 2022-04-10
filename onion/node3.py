@@ -71,7 +71,7 @@ try:
                 sys.exit(1)
             arp_table_socket_client[ip_address] = NODE
             print(f"[Connecting] {node_ip} is connected to {ip_address}")
-            print(arp_table_socket_client)
+    print(arp_table_socket_client)
 
     time.sleep(1)
     online = True

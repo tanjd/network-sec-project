@@ -99,6 +99,10 @@ def handle_client(ip, conn, is_router):
                     print("Received", repr(data))
                 else:
                     print("Received node data: ", repr(data))
+                    # print packet
+                    # decode packet
+                    # retrieve next destination_ip
+                    # broadcast new packet with new destination_ip
         except ConnectionError:
             return False
 
