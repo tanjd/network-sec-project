@@ -1,0 +1,33 @@
+[LISTENING]
+listening on ('127.0.0.1', 51000)
+
+[Connecting] 1a is connected to 2a
+Node 2 is online
+Node 3 is online
+[Connecting] 1a is connected to 3a
+Node 4 is online
+Node 5 is online
+{'2a': <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45902)>, '3a': <socket.socket fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45908)>, '4a': <socket.socket fd=10, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45914)>, '5a': <socket.socket fd=11, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45920)>}
+
+[NEW CONNECTION] 2a - <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45902)> connected.
+[Ready to receiving packets]
+
+
+[NEW CONNECTION] 3a - <socket.socket fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45908)> connected.
+[NEW CONNECTION] 5a - <socket.socket fd=11, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45920)> connected.
+
+[NEW CONNECTION] 4a - <socket.socket fd=10, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 51000), raddr=('127.0.0.1', 45914)> connected.
+
+[Ready to receiving packets]
+Received b'Message from 2a'
+[Ready to receiving packets]
+
+[Ready to receiving packets]
+
+Received b'Message from 4a'
+
+Received b'Message from 3a'
+[Connecting] 1a is connected to 4a
+Received b'Message from 5a'
+[Connecting] 1a is connected to 5a
+{'router': <socket.socket fd=4, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 48900), raddr=('127.0.0.1', 50000)>, '1a': None, '2a': <socket.socket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 52892), raddr=('127.0.0.1', 52000)>, '3a': <socket.socket fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 40320), raddr=('127.0.0.1', 53000)>, '4a': <socket.socket fd=12, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 38268), raddr=('127.0.0.1', 54000)>, '5a': <socket.socket fd=13, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 57822), raddr=('127.0.0.1', 55000)>}
