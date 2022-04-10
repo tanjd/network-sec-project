@@ -38,11 +38,11 @@ def handle_client(ip, conn):
             print("[Checking!] Packet Dropped")
 
 
-def handle_clients(arp_table_socket):
-    thread = threading.Thread(
-        target=handle_client, args=(node3_ip, arp_table_socket[node3_ip])
-    )
-    thread.start()
+# def handle_clients(arp_table_socket):
+#     thread = threading.Thread(
+#         target=handle_client, args=(node3_ip, arp_table_socket[node3_ip])
+#     )
+#     thread.start()
 
 
 def start_listening(node_server):
@@ -55,7 +55,11 @@ def start_listening(node_server):
         if arp_table_socket[node3_ip] is None:
             arp_table_socket[node3_ip] = conn
             print("Node 3 is online")
-    handle_clients(arp_table_socket)
+
+    thread = threading.Thread(
+        target=handle_client, args=(node3_ip, arp_table_socket[node3_ip])
+    )
+    thread.start()
 
 
 node_ip = "2a"
