@@ -20,19 +20,18 @@ def start_listening(socket_conn):
                 break
 
     print(arp_table_socket)
-    handle_clients(arp_table_socket)
+    handle_clients(arp_table_socket, True)
 
 
 try:
     ROUTER_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except OSError as msg:
     ROUTER_SOCKET = None
-
     print(msg)
 try:
     ROUTER_SOCKET.bind((HOST, R1_PORT))
     arp_table_socket.pop("router", None)
-    # arp_table_socket["router"] = ROUTER_SOCKET
+
     print("[LISTENING]")
 
     thread = threading.Thread(
