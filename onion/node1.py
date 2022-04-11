@@ -110,8 +110,8 @@ try:
             message = input("\n Enter a message: ")
 
             if message == "": #output handling
-
                 print("\nPlease try again")
+
             else: #Set up onion path, keys and broadcast packet
                 time.sleep(0.5)
                 print("\n Creating random path of onion nodes...")

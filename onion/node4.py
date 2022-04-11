@@ -78,6 +78,8 @@ try:
 
     time.sleep(1)
     online = True
+
+    #console user interface
     while online:
         print(f"\n\t\tEnter 'q' anytime to terminate node {node_index} ")
         answer = input("""\n
@@ -94,40 +96,49 @@ try:
 
                     Choose a node to send to:
                     """)
-        if answer == "q":
+        if answer == "q": #terminate node
             online = False
             NODE_SOCKET.close()
             print(f"\nTerminating node {node_index}\n")
-        elif answer == "" or answer not in arp_table_socket_client.keys():
+
+        elif answer == "" or answer not in arp_table_socket_client.keys(): #output handling
             print("\nInvalid option. Please try again")
+
         else:
             dest_ip = answer
             message = input("\n Enter a message: ")
-            time.sleep(0.5)
-            print("\n Creating random path of onion nodes...")
-            path = generate_onion_path(node_ip, dest_ip)
-            time.sleep(0.5)
-            print(
-                "\n Onion path: Sender {my_ip} -> {onion1} -> {onion2} -> {onion3} -> Receiver {onion4}".format(
-                    my_ip=node_ip,
-                    onion1=path[0],
-                    onion2=path[1],
-                    onion3=path[2],
-                    onion4=path[3],
+
+            if message == "": #output handling
+                print("\nPlease try again")
+                
+            else: #Set up onion path, keys and broadcast packet
+                time.sleep(0.5)
+                print("\n Creating random path of onion nodes...")
+                path = generate_onion_path(node_ip, dest_ip)
+
+                time.sleep(0.5)
+                print(
+                    "\n Onion path: Sender {my_ip} -> {onion1} -> {onion2} -> {onion3} -> Receiver {onion4}".format(
+                        my_ip=node_ip,
+                        onion1=path[0],
+                        onion2=path[1],
+                        onion3=path[2],
+                        onion4=path[3],
+                    )
                 )
-            )
-            time.sleep(0.5)
-            print("\n Creating keys ...")
-            generate_keys(path)
-            time.sleep(0.5)
-            print("\n Preparing packet ...")
-            encrypted_packet = prepare_onion_packet(path, message, dest_ip)
-            print("\nEncrypted_packet\t", encrypted_packet)
-            print("\nPacket length\t", len(encrypted_packet))
-            next_node = path[0]
-            packet_to_send = bytes(node_ip, 'utf-8') + encrypted_packet 
-            broadcast_data(arp_table_socket_client, packet_to_send, node_ip)
-            time.sleep(4)
+                print("\n Creating keys ...")
+                generate_keys(path)
+                time.sleep(0.5)
+
+                print("\n Preparing packet ...")
+                encrypted_packet = prepare_onion_packet(path, message, dest_ip)
+                print("\nEncrypted_packet\t", encrypted_packet)
+                print("\nPacket length\t", len(encrypted_packet))
+                
+                next_node = path[0]
+                packet_to_send = bytes(node_ip, "utf-8") + encrypted_packet
+                broadcast_data(arp_table_socket_client, packet_to_send, node_ip)
+                time.sleep(4)
 
 except OSError as msg:
     NODE_SOCKET.close()
