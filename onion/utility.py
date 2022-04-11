@@ -13,6 +13,7 @@ from os import urandom
 HOST = "localhost"
 
 MAX_PACKET_LENGTH = 256
+PADDING = b'/'
 
 R1_PORT = 50000
 router1_mac = "R1"
@@ -74,6 +75,50 @@ ip_address_port_dict = {
     node5_ip: N5_PORT,
 }
 
+#SOCKET CONNECTIONS
+def connect_to_router():
+    try:
+        ROUTER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except OSError as msg:
+        ROUTER = None
+        print(msg)
+    try:
+        ROUTER.connect(ROUTER_SOCKET)
+        time.sleep(1)
+    except OSError as msg:
+        ROUTER.close()
+        print(msg)
+        ROUTER = None
+    if ROUTER is None:
+        print("could not open socket")
+        sys.exit(1)
+    return ROUTER
+
+
+def connect_to_node(node_ip, ip_address):
+    PORT = ip_address_port_dict[ip_address]
+    connected = False
+
+    while not connected:
+        time.sleep(3)
+        try:
+            NODE = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except OSError as msg: 
+            NODE = None
+            print(msg)
+        try:
+            NODE.connect((HOST, PORT))
+            time.sleep(1)
+            connected = True
+        except OSError as msg:
+            NODE.close()
+            print(f"{msg} : attempting to reconnect to {ip_address}")
+            NODE = None
+    if NODE is None:
+        print("could not open socket")
+        return False
+    return NODE
+
 
 def broadcast_data(arp_table_socket_client, packet, node_ip):
     is_success = True
@@ -96,13 +141,7 @@ def send_data(socket_conn, packet):
     except ConnectionError:
         return False
 
-
-def padding(packet, max_packet_size):
-    length_to_pad = max_packet_size - len(packet)
-    to_pad = urandom(length_to_pad)
-    return packet + to_pad
-
-
+#ONION 'ETHERNET'
 def generate_onion_path(src, dest):
     ip_dict = copy.deepcopy(ip_address_port_dict)
     ip_dict.pop(src)
@@ -125,6 +164,16 @@ def generate_keys(path):
     return
 
 
+def padding(payload, MAX_PACKET_LENGTH, PADDING):
+    return payload + PADDING * (MAX_PACKET_LENGTH - len(payload))
+
+
+def unpadding(payload, PADDING):
+    index = payload.index(PADDING+PADDING)
+    unpadded_payload = payload[0:index]
+    return unpadded_payload
+
+
 def prepare_onion_packet(path, message, dest):
     message = bytes(dest + message, "utf-8")
     for n in range(len(path) - 1, -1, -1):
@@ -133,7 +182,6 @@ def prepare_onion_packet(path, message, dest):
         key = key_file[0:16]
         iv = key_file[16:]
         print("\nEncrypting with {n} key ...".format(n=node_ip))
-        # print('\ncurrent msg: ', message, ' length ', len(message))
         cipher = AES.new(key, AES.MODE_CBC, iv)
 
         encrypted_message = cipher.encrypt(pad(message, AES.block_size))
@@ -142,9 +190,7 @@ def prepare_onion_packet(path, message, dest):
         )
         dest_addr = path[n]
         message = bytes(dest_addr, "utf-8") + encrypted_message
-
-        # print('next message to encrypt', message)
-    encrypted_packet = message
+    encrypted_packet = padding(message, MAX_PACKET_LENGTH, PADDING)
     return encrypted_packet
 
 
@@ -167,12 +213,11 @@ def decrypt(data, node):  # data does NOT include next hop addr
     iv = key_file[16:]
     cipher = AES.new(key, AES.MODE_CBC, iv)
     decrypted = cipher.decrypt(data)
-    # print("decrypted packet", decrypted)
-    # print("\nLength of decrypted packet", len(decrypted))
     unpadded_packet = unpad(decrypted, AES.block_size)
     return (unpadded_packet[0:2], unpadded_packet[2:])  # Returns (Next Addr, Msg)
 
 
+#LISTENING SOCKETS
 def handle_clients(node_ip, arp_table_socket, is_router):
     for ip, client_socket in arp_table_socket.items():
         thread = threading.Thread(
@@ -183,7 +228,7 @@ def handle_clients(node_ip, arp_table_socket, is_router):
 
 def handle_client(my_ip, ip, conn, is_router):
     print(f"\n[NEW CONNECTION] {ip} - {conn} connected.")
-    print("[Ready to receiving packets]\n")
+    print("[Ready to receive packets]\n")
     connected = True
     while connected:
         try:
@@ -192,21 +237,26 @@ def handle_client(my_ip, ip, conn, is_router):
                 if is_router:
                     print("Received", repr(data))
                 else:
-                    print("\n[BROADCAST RECEIVED] ", data)
-                    src_ip = data[0:2].decode("utf-8")
-                    dest_ip = data[2:4].decode("utf-8")
+                    print(f"\n[BROADCAST RECEIVED] {len(data[2:])} bytes:", data)
+
+                    unpadded_data = unpadding(data, PADDING)
+                    src_ip = unpadded_data[0:2].decode("utf-8")
+                    dest_ip = unpadded_data[2:4].decode("utf-8")
+
                     if dest_ip == my_ip:
-                        packet = data[4:]
+                        packet = unpadded_data[4:]
                         time.sleep(0.5)
                         print(
                             "\n [ONION ETHERNET] Received packet from {src}:\t{encrypted_packet}".format(
                                 src=src_ip, encrypted_packet=packet
                             )
                         )
+
                         print("\n[ONION ETHERNET] Decrypting packet ...")
                         time.sleep(0.5)
                         next_dest, decrypted_data = decrypt(packet, my_ip)
                         next_dest = next_dest.decode("utf-8")
+
                         if next_dest == my_ip:  # Receiving Node decrypts plaintext msg
                             plaintext = decrypted_data.decode("utf-8")
                             if plaintext:
@@ -215,7 +265,11 @@ def handle_client(my_ip, ip, conn, is_router):
                                         msg=plaintext
                                     )
                                 )
-                        else:
+
+                        else: #Packet Decryption and forwarding
+                            packet_header = bytes(my_ip + next_dest, "utf-8")
+                            packet_to_send = padding(packet_header + decrypted_data, MAX_PACKET_LENGTH, PADDING)
+
                             print("\n[ONION ETHERNET]Decrypted_data:\t", decrypted_data)
                             print(
                                 "\n[ONION ETHERNET] Payload Length:\t",
@@ -226,8 +280,6 @@ def handle_client(my_ip, ip, conn, is_router):
                                     dest=next_dest
                                 ),
                             )
-                            packet_header = bytes(my_ip + next_dest, "utf-8")
-                            packet_to_send = packet_header + decrypted_data
                             print(
                                 "\n[ONION ETHERNET] Sending packet:\t {packet}".format(
                                     packet=packet_to_send
@@ -236,54 +288,8 @@ def handle_client(my_ip, ip, conn, is_router):
                             broadcast_data(
                                 arp_table_socket_client, packet_to_send, my_ip
                             )
-                    else:
+                    else: #Drop
                         print("[DROPPED] Packet dropped")
 
         except ConnectionError:
             return False
-
-
-def connect_to_router():
-    try:
-        ROUTER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except OSError as msg:
-        ROUTER = None
-        print(msg)
-    try:
-        ROUTER.connect(ROUTER_SOCKET)
-        time.sleep(1)
-        ROUTER.sendall(b"Hello, world")
-    except OSError as msg:
-        ROUTER.close()
-        print(msg)
-        ROUTER = None
-    if ROUTER is None:
-        print("could not open socket")
-        sys.exit(1)
-    return ROUTER
-
-
-def connect_to_node(node_ip, ip_address):
-    PORT = ip_address_port_dict[ip_address]
-    connected = False
-
-    while not connected:
-        time.sleep(3)
-        try:
-            NODE = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except OSError as msg:
-            NODE = None
-            print(msg)
-        try:
-            NODE.connect((HOST, PORT))
-            time.sleep(1)
-            NODE.sendall(b"Message from " + bytes(node_ip, "utf-8"))
-            connected = True
-        except OSError as msg:
-            NODE.close()
-            print(f"{msg} : attempting to reconnect to {ip_address}")
-            NODE = None
-    if NODE is None:
-        print("could not open socket")
-        return False
-    return NODE
