@@ -7,6 +7,7 @@ from utility import (
     choose_protocol,
     send_data,
     start_receiver,
+    configure_firewall
 )
 import threading
 from ctypes import c_int
@@ -113,6 +114,8 @@ try:
                 protocol,
                 data,
             )
+        elif protocol in [5]:
+            configure_firewall(firewall_rules)
         else:
             print("TBC")
 
