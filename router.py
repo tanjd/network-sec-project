@@ -173,3 +173,4 @@ except OSError as msg:
 if router1 is None or router2 is None:
     print("could not open socket")
     sys.exit(1)
+ 

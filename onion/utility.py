@@ -71,18 +71,29 @@ ip_address_port_dict = {
     node5_ip: N5_PORT,
 }
 
-def broadcast_data(arp_table_socket_client, packet_header):
+marks = {'Physics':67, 'Maths':87}
+
+print(marks.values())
+# Output: dict_values([67, 87])
+
+
+def broadcast_data(arp_table_socket_client, packet, node_ip):
     is_success = True
-    for socket_conn in arp_table_socket_client.values():
-        send_data(socket_conn, packet_header)
-        if not send_data:
-            is_success = False
+
+    # arp_table_socket_client.pop(node_ip)
+    for client in arp_table_socket_client:
+        socket_conn = arp_table_socket_client[client]
+        if client != node_ip:
+            send_data(socket_conn, packet)
+            if not send_data:
+                is_success = False
+
     return is_success
 
 
-def send_data(socket_conn, packet_header):
+def send_data(socket_conn, packet):
     try:
-        socket_conn.sendall(packet_header)
+        socket_conn.sendall(packet)
         return True
     except ConnectionError:
         return False
@@ -94,8 +105,9 @@ def generate_onion_path(src, dest):
     ip_dict.pop(dest)
     order = random.sample(range(3), 3)
     ip_list = list(ip_dict)
-    onion_path = [ip_list[order[0]], ip_list[order[1]],ip_list[order[2]]]
+    onion_path = [ip_list[order[0]], ip_list[order[1]], ip_list[order[2]], dest]
     return onion_path
+
 
 def generate_keys(path):
     for node in path:
@@ -108,36 +120,29 @@ def generate_keys(path):
         file_out.close()
     return
 
-def prepare_onion_packet(path, message):
-    message = bytes(message, 'utf-8')
+
+def prepare_onion_packet(path, message, dest):
+    message = bytes(dest + message, "utf-8")
     for n in range(len(path) - 1, -1, -1):
-        key_file = open("keys/{node}.bin".format(node=path[n]), "rb").read()
+        node_ip = path[n]
+        key_file = open("keys/{node}.bin".format(node=node_ip), "rb").read()
         key = key_file[0:16]
         iv = key_file[16:]
-        # print('current msg: ', message, ' length ', len(message))
-        print("\nEncrypting with {n} key ...".format(n=path[n]))
+        print("\nEncrypting with {n} key ...".format(n=node_ip))
+        # print('\ncurrent msg: ', message, ' length ', len(message))
         cipher = AES.new(key, AES.MODE_CBC, iv)
-        encrypted_message = cipher.encrypt(pad(message, AES.block_size))
- 
 
-        if n != 0:
-            next_node = path[n - 1]
-            message = bytes(next_node, "utf-8") + encrypted_message
-        else:
-            message = encrypted_message
+        encrypted_message = cipher.encrypt(pad(message, AES.block_size))
+        print(
+            "encrypted message", encrypted_message, " length ", len(encrypted_message)
+        )
+        dest_addr = path[n]
+        message = bytes(dest_addr, "utf-8") + encrypted_message
+
         # print('next message to encrypt', message)
     encrypted_packet = message
     return encrypted_packet
 
-def decrypt(data, node): #data does NOT include next hop addr
-    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
-    key = key_file[0:16]
-    iv = key_file[16:]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted = cipher.decrypt(data)
-    print('decrypted', decrypted, 'length of decrypted', len(decrypted))
-    unpadded_packet = unpad(decrypted, AES.block_size)
-    return (unpadded_packet[0:2], unpadded_packet[2:])  # Returns (Next Addr, Msg)
 
 def get_ip_address(node_index):
     if node_index == 1:
@@ -152,15 +157,26 @@ def get_ip_address(node_index):
         return node5_ip
 
 
-def handle_clients(arp_table_socket, is_router=False):
+def decrypt(data, node):  # data does NOT include next hop addr
+    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
+    key = key_file[0:16]
+    iv = key_file[16:]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(data)
+    # print("decrypted packet", decrypted)
+    # print("\nLength of decrypted packet", len(decrypted))
+    unpadded_packet = unpad(decrypted, AES.block_size)
+    return (unpadded_packet[0:2], unpadded_packet[2:])  # Returns (Next Addr, Msg)
+
+def handle_clients(node_ip, arp_table_socket, is_router):
     for ip, client_socket in arp_table_socket.items():
         thread = threading.Thread(
-            target=handle_client, args=(ip, client_socket, is_router)
+            target=handle_client, args=(node_ip, ip, client_socket, is_router)
         )
         thread.start()
 
 
-def handle_client(ip, conn, is_router):
+def handle_client(my_ip, ip, conn, is_router):
     print(f"\n[NEW CONNECTION] {ip} - {conn} connected.")
     print("[Ready to receiving packets]\n")
     connected = True
@@ -171,20 +187,47 @@ def handle_client(ip, conn, is_router):
                 if is_router:
                     print("Received", repr(data))
                 else:
-                    if data[0:2].decode('utf-8') in list(ip_address_port_dict):
-                        current_node_ip = data[0:2].decode('utf-8')
-                        encrypted_packet = data[2:]
-                        next_addr, decrypted_data = decrypt(encrypted_packet, current_node_ip)
-                        print('Next onion node\t', next_addr)
-                        print('Decrypted_data\t', decrypted_data)
-                        print("Length of decrypted data\t", len(decrypted_data))
-                        packet_to_send = next_addr + decrypted_data
-                        broadcast_data(arp_table_socket_client, packet_to_send)
+                    print("\n[BROADCAST RECEIVED] ", data)
+                    src_ip = data[0:2].decode("utf-8")
+                    dest_ip = data[2:4].decode("utf-8")
+                    if dest_ip == my_ip:
+                        packet = data[4:]
+                        time.sleep(0.5)
+                        print("\n [ONION ETHERNET] Received packet from {src}:\t{encrypted_packet}".format(src=src_ip, encrypted_packet=packet))
+                        print(
+                            "\n[ONION ETHERNET] Decrypting packet ..."
+                        )
+                        time.sleep(0.5)
+                        next_dest, decrypted_data = decrypt(packet, my_ip)
+                        next_dest = next_dest.decode('utf-8')
+                        if next_dest == my_ip: #Receiving Node decrypts plaintext msg
+                            plaintext = decrypted_data.decode("utf-8")
+                            if plaintext:
+                                print(
+                                    "\n [ONION ETHERNET] Received message: {msg}".format(
+                                        msg=plaintext                                  )
+                                )
+                        else:              
+                            print("\n[ONION ETHERNET]Decrypted_data:\t", decrypted_data)
+                            print(
+                                "\n[ONION ETHERNET] Payload Length:\t",
+                                len(decrypted_data),
+                            )
+                            print(
+                                "\n[ONION ETHERNET] Sending packet to:\t{dest}".format(dest=next_dest),
+                            )
+                            packet_header = bytes(my_ip + next_dest, 'utf-8')
+                            packet_to_send =  packet_header + decrypted_data
+                            print(
+                                "\n[ONION ETHERNET] Sending packet:\t {packet}".format(packet=packet_to_send),
+                            )
+                            broadcast_data(arp_table_socket_client, packet_to_send, my_ip)
                     else:
-                        print("\nReceived message:\t", repr(data))          
+                        print("[DROPPED] Packet dropped")
 
         except ConnectionError:
             return False
+
 
 def connect_to_router():
     try:
@@ -230,7 +273,3 @@ def connect_to_node(node_ip, ip_address):
         print("could not open socket")
         return False
     return NODE
-
-
-
-
