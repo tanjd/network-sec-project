@@ -155,11 +155,29 @@ try:
     while online.value:
         destination_mac = router_mac
         protocol = choose_protocol()
-        if protocol in [0, 1, 2, 3]:
-            if protocol == 3:
-                sender_ip = input("\nEnter IP Address to use for spoofing: ")
+        if protocol in [0, 1, 2]:
+            answer = input("\nDo you want to send the sample data (y|n): ")
+            if answer == "y":
+                data = "MY DATA"
             else:
-                sender_ip = node_ip
+                data = input("\nEnter message to send: ")
+
+            destination_ip = input("\n Enter IP Address to ping: ")
+            destination_mac = router_mac
+            if destination_ip in arp_table_mac.keys():
+                destination_mac = arp_table_mac[destination_ip]
+
+            broadcast_data(
+                arp_table_socket,
+                node_ip,
+                destination_ip,
+                node_mac,
+                destination_mac,
+                protocol,
+                data,
+            )
+        elif protocol in [3]:
+            sender_ip = input("\nEnter IP Address to use for spoofing: ")
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
                 data = "MY DATA"
@@ -177,7 +195,7 @@ try:
                 destination_ip,
                 node_mac,
                 destination_mac,
-                protocol,
+                1,
                 data,
             )
         elif protocol in [4]:
