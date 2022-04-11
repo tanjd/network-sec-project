@@ -27,7 +27,6 @@ NODE_SOCKET = None
 
 ROUTER = None
 
-
 def start_listening(socket_conn):
     print(f"listening on {socket_conn.getsockname()}\n")
     socket_conn.listen(1)
@@ -81,8 +80,8 @@ try:
     time.sleep(1)
     online = True
     while online:
-        time.sleep(4)
-        print(f"\n\t\tEnter 'y' anytime to terminate node {node_index} ")
+        
+        print(f"\n\t\tEnter 'q' anytime to terminate node {node_index} ")
         answer = input(
             """\n
                     ********************
@@ -99,10 +98,12 @@ try:
                     Choose a node to send to:
                     """
         )
-        if answer == "y":
+        if answer == "q":
             online = False
             NODE_SOCKET.close()
             print(f"\nTerminating node {node_index}\n")
+        elif answer == "" or answer not in arp_table_socket_client.keys():
+            print("\nInvalid option. Please try again")
         else:
             dest_ip = answer
             message = input("\n Enter a message: ")
@@ -130,6 +131,7 @@ try:
             next_node = path[0]
             packet_to_send = bytes(node_ip, "utf-8") + encrypted_packet
             broadcast_data(arp_table_socket_client, packet_to_send, node_ip)
+            time.sleep(4)
 
 except OSError as msg:
     NODE_SOCKET.close()

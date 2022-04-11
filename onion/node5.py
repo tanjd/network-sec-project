@@ -80,8 +80,7 @@ try:
     time.sleep(1)
     online = True
     while online:
-        time.sleep(4)
-        print(f"\n\t\tEnter 'y' anytime to terminate node {node_index} ")
+        print(f"\n\t\tEnter 'q' anytime to terminate node {node_index} ")
         answer = input("""\n
                     ********************
                     
@@ -96,10 +95,12 @@ try:
 
                     Choose a node to send to:
                     """)
-        if answer == "y":
+        if answer == "q":
             online = False
             NODE_SOCKET.close()
             print(f"\nTerminating node {node_index}\n")
+        elif answer == "" or answer not in arp_table_socket_client.keys():
+            print("\nInvalid option. Please try again")
         else:
             dest_ip = answer
             message = input("\n Enter a message: ")
@@ -124,10 +125,10 @@ try:
             encrypted_packet = prepare_onion_packet(path, message, dest_ip)
             print("\nEncrypted_packet\t", encrypted_packet)
             print("\nPacket length\t", len(encrypted_packet))
-            # print("\n Sending data:\t", encrypted_packet)
             next_node = path[0]
-            packet_to_send = bytes(node_ip, 'utf-8') + encrypted_packet #src + dest + packet
+            packet_to_send = bytes(node_ip, 'utf-8') + encrypted_packet
             broadcast_data(arp_table_socket_client, packet_to_send, node_ip)
+            time.sleep(4)
 
 except OSError as msg:
     NODE_SOCKET.close()

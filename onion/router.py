@@ -43,7 +43,7 @@ try:
     online = True
     while online:
         answer = input("\nDo you want to terminate router? ")
-        if answer == "y":
+        if answer == "q":
             online = False
             ROUTER_SOCKET.close()
             print("Terminating router")

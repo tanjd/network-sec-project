@@ -8,8 +8,11 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 from pathlib import Path
+from os import urandom
 
 HOST = "localhost"
+
+MAX_PACKET_LENGTH = 256
 
 R1_PORT = 50000
 router1_mac = "R1"
@@ -71,11 +74,6 @@ ip_address_port_dict = {
     node5_ip: N5_PORT,
 }
 
-marks = {'Physics':67, 'Maths':87}
-
-print(marks.values())
-# Output: dict_values([67, 87])
-
 
 def broadcast_data(arp_table_socket_client, packet, node_ip):
     is_success = True
@@ -97,6 +95,12 @@ def send_data(socket_conn, packet):
         return True
     except ConnectionError:
         return False
+
+
+def padding(packet, max_packet_size):
+    length_to_pad = max_packet_size - len(packet)
+    to_pad = urandom(length_to_pad)
+    return packet + to_pad
 
 
 def generate_onion_path(src, dest):
@@ -168,6 +172,7 @@ def decrypt(data, node):  # data does NOT include next hop addr
     unpadded_packet = unpad(decrypted, AES.block_size)
     return (unpadded_packet[0:2], unpadded_packet[2:])  # Returns (Next Addr, Msg)
 
+
 def handle_clients(node_ip, arp_table_socket, is_router):
     for ip, client_socket in arp_table_socket.items():
         thread = threading.Thread(
@@ -193,35 +198,44 @@ def handle_client(my_ip, ip, conn, is_router):
                     if dest_ip == my_ip:
                         packet = data[4:]
                         time.sleep(0.5)
-                        print("\n [ONION ETHERNET] Received packet from {src}:\t{encrypted_packet}".format(src=src_ip, encrypted_packet=packet))
                         print(
-                            "\n[ONION ETHERNET] Decrypting packet ..."
+                            "\n [ONION ETHERNET] Received packet from {src}:\t{encrypted_packet}".format(
+                                src=src_ip, encrypted_packet=packet
+                            )
                         )
+                        print("\n[ONION ETHERNET] Decrypting packet ...")
                         time.sleep(0.5)
                         next_dest, decrypted_data = decrypt(packet, my_ip)
-                        next_dest = next_dest.decode('utf-8')
-                        if next_dest == my_ip: #Receiving Node decrypts plaintext msg
+                        next_dest = next_dest.decode("utf-8")
+                        if next_dest == my_ip:  # Receiving Node decrypts plaintext msg
                             plaintext = decrypted_data.decode("utf-8")
                             if plaintext:
                                 print(
-                                    "\n [ONION ETHERNET] Received message: {msg}".format(
-                                        msg=plaintext                                  )
+                                    "\n", "*"*40, "\n[ONION ETHERNET] Received message: {msg}".format(
+                                        msg=plaintext
+                                    )
                                 )
-                        else:              
+                        else:
                             print("\n[ONION ETHERNET]Decrypted_data:\t", decrypted_data)
                             print(
                                 "\n[ONION ETHERNET] Payload Length:\t",
                                 len(decrypted_data),
                             )
                             print(
-                                "\n[ONION ETHERNET] Sending packet to:\t{dest}".format(dest=next_dest),
+                                "\n[ONION ETHERNET] Sending packet to:\t{dest}".format(
+                                    dest=next_dest
+                                ),
                             )
-                            packet_header = bytes(my_ip + next_dest, 'utf-8')
-                            packet_to_send =  packet_header + decrypted_data
+                            packet_header = bytes(my_ip + next_dest, "utf-8")
+                            packet_to_send = packet_header + decrypted_data
                             print(
-                                "\n[ONION ETHERNET] Sending packet:\t {packet}".format(packet=packet_to_send),
+                                "\n[ONION ETHERNET] Sending packet:\t {packet}".format(
+                                    packet=packet_to_send
+                                ),
                             )
-                            broadcast_data(arp_table_socket_client, packet_to_send, my_ip)
+                            broadcast_data(
+                                arp_table_socket_client, packet_to_send, my_ip
+                            )
                     else:
                         print("[DROPPED] Packet dropped")
 
