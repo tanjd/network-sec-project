@@ -35,7 +35,7 @@ def handle_client(ip, conn):
             node_mac = sniffing_mac
 
         if received_packet is False:
-            print(f"{ip} disconnected")
+            print(f"{ip} - {conn} disconnected")
             connected = False
             conn.close()
             break
@@ -56,13 +56,6 @@ def handle_client(ip, conn):
                 log_sniffed_packet(received_packet)
         else:
             print("[Checking!] Packet Dropped")
-
-
-# def handle_clients(arp_table_socket):
-#     thread = threading.Thread(
-#         target=handle_client, args=(node3_ip, arp_table_socket[node3_ip])
-#     )
-#     thread.start()
 
 
 def start_listening(node_server):

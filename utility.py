@@ -258,13 +258,13 @@ def start_receiver(
             print("Sniffing mode activated")
             node_ip = global_sniffing_ip
             node_mac = global_sniffing_mac
-        elif sniffing_mode == False:
+        elif sniffing_mode is False:
             print("Sniffing mode deactivated")
             node_ip = global_sniffing_ip
             node_mac = global_sniffing_mac
 
         if received_packet is False:
-            print(f"{node_ip} disconnected")
+            print(f"{node_ip} - {conn} disconnected")
             connected = False
             conn.close()
             break
