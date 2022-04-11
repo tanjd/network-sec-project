@@ -169,7 +169,7 @@ try:
                 protocol,
                 data,
             )
-        elif protocol in [3]:
+        elif protocol == 3:
             sender_ip = input("\nEnter IP Address to use for spoofing: ")
             answer = input("\nDo you want to send the sample data (y|n): ")
             if answer == "y":
@@ -188,11 +188,11 @@ try:
                 destination_ip,
                 node_mac,
                 destination_mac,
-                1,
+                0,
                 data,
             )
-        elif protocol in [4]:
-            if sniffing_mode == False:
+        elif protocol == 4:
+            if sniffing_mode is False:
                 sniffing_ip = input("\nEnter IP Address to use for sniffing: ")
                 sniffing_mac = input("\nEnter MAC Address to use for sniffing: ")
                 sniffing_mode = True
@@ -205,14 +205,16 @@ try:
                     daemon=True,
                 )
                 thread.start()
-            elif sniffing_mode == True:
+            else:
+                print("Sniffing mode is off")
+                sniffing_mode = False
                 thread = threading.Thread(
                     target=set_sniffing_to_off,
                     args=(original_ip, original_mac),
                     daemon=True,
                 )
                 thread.start()
-                sniffing_mode = False
+
         else:
             print("TBC")
 
