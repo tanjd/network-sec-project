@@ -1,5 +1,4 @@
 import logging
-import re
 from Packet import Packet
 
 
@@ -107,13 +106,13 @@ def send_data(
         payload,
     )
 
-    packet.print_packet_information()
+    # packet.print_packet_information()
     packet_header = packet.create_packet_header()
     try:
         node.sendall(packet_header)
         return True
     except:
-        raise ConnectionError
+        pass
 
 
 def retrieve_packet(node):
@@ -252,8 +251,13 @@ def start_receiver(
     connected = True
 
     while connected:
-
         received_packet = retrieve_packet(conn)
+        if received_packet is False:
+            print(f"{node_ip} - {conn} disconnected")
+            connected = False
+            conn.close()
+            break
+
         if sniffing_mode:
             print("Sniffing mode activated")
             node_ip = global_sniffing_ip
@@ -262,12 +266,6 @@ def start_receiver(
             print("Sniffing mode deactivated")
             node_ip = global_sniffing_ip
             node_mac = global_sniffing_mac
-
-        if received_packet is False:
-            print(f"{node_ip} - {conn} disconnected")
-            connected = False
-            conn.close()
-            break
 
         if (
             received_packet
@@ -330,9 +328,14 @@ def manage_protocol(arp_table_socket, received_packet, node_ip, node_mac, online
         return True
 
     elif protocol == 2:
-        print(f"\n[CONNECTION CLOSED] {node_ip} disconnected.")
+        print(f"\n[CONNECTION CLOSED] {node_ip} disconnected")
         for socket_conn in arp_table_socket.values():
-            socket_conn.close()
+            try:
+                # print(socket_conn)
+                socket_conn.shutdown(0)
+                socket_conn.close()
+            except OSError:
+                pass
         online.value = 0
         return False
     else:

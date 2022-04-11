@@ -35,7 +35,7 @@ try:
     node.connect(router)
     arp_table_socket["router"] = node
 
-    print("[Connecting] Node 1 is connected to router")
+    print("\n[Connecting] Node 1 is connected to router")
     thread = threading.Thread(
         target=start_receiver,
         args=(arp_table_socket, node, node_ip, node_mac, online),
@@ -65,7 +65,7 @@ try:
                     node, sender_ip, ip_addr, node_mac, destination_mac, protocol, data
                 )
             except ConnectionError:
-                online = False
+                online.value = False
         else:
             print("TBC")
 

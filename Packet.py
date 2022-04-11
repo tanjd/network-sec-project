@@ -34,8 +34,8 @@ class Packet:
         )
 
     def print_packet_information(self):
-        print("\n********************************")
-        # print(self.create_packet_header())
+        print("\n********************************\n")
+        print(self.create_packet_header())
         print(
             "\nSource MAC address:      {source_mac}"
             "\nDestination MAC address: {destination_mac}"

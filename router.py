@@ -13,9 +13,11 @@ def handle_client(ip, conn):
         try:
             received_packet = retrieve_packet(conn)
             if received_packet is False:
-                print(f"{ip} disconnected")
+                print(f"\n{ip} disconnected")
                 connected = False
-                conn.close()
+                for router_mac, arp_records in arp_table_mac.items():
+                    if ip in arp_records.keys():
+                        arp_table_socket[router_mac].pop(ip, None)
                 break
 
             if received_packet:
@@ -38,19 +40,19 @@ def handle_client(ip, conn):
                         try:
                             packet_header = received_packet.create_packet_header()
                             sending_conn.sendall(packet_header)
-                        except ConnectionResetError:
+                        except ConnectionError:
                             print(
                                 f"\n {received_packet.destination_ip.hex()} is not online."
                             )
+                            print(sending_conn)
                             sending_conn.close()
         except:
             for socket_connections in arp_table_socket.values():
                 for ip, node_conn in socket_connections.items():
                     if node_conn == conn:
                         socket_connections[ip] = None
+                        arp_table_socket.pop(ip, None)
             connected = False
-
-    conn.close()
 
 
 def handle_clients(arp_table_socket):

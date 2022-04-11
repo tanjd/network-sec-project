@@ -1,14 +1,12 @@
 import socket
 import sys
 import time
-from Packet import Packet
 from utility import (
     broadcast_data,
     manage_protocol,
     print_node_information,
     choose_protocol,
     retrieve_packet,
-    send_data,
     start_receiver,
     set_sniffing_configuration,
     log_sniffed_packet,
@@ -29,16 +27,17 @@ def handle_client(ip, conn):
     connected = True
     while connected:
         received_packet = retrieve_packet(conn)
-        if sniffing_mode:
-            print("sniffing mode activated")
-            node_ip = sniffing_ip
-            node_mac = sniffing_mac
 
         if received_packet is False:
             print(f"{ip} - {conn} disconnected")
             connected = False
-            conn.close()
+            arp_table_socket.pop(ip, None)
             break
+
+        if sniffing_mode:
+            print("sniffing mode activated")
+            node_ip = sniffing_ip
+            node_mac = sniffing_mac
 
         if (
             received_packet

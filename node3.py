@@ -5,9 +5,8 @@ from utility import (
     broadcast_data,
     print_node_information,
     choose_protocol,
-    send_data,
     start_receiver,
-    configure_firewall
+    configure_firewall,
 )
 import threading
 from ctypes import c_int
@@ -68,7 +67,7 @@ try:
     node2.connect(NODE2)
     arp_table_socket[node2_ip] = node2
 
-    print("[Connecting] Node 3 is connected to router")
+    print("\n[Connecting] Node 3 is connected to router")
     thread = threading.Thread(
         target=start_receiver,
         args=(arp_table_socket, router, node_ip, node_mac, online, firewall_rules),
@@ -76,7 +75,7 @@ try:
     )
     thread.start()
 
-    print("[Connecting] Node 3 is connected to node 2")
+    print("\n[Connecting] Node 3 is connected to node 2")
     thread = threading.Thread(
         target=start_receiver,
         args=(arp_table_socket, node2, node_ip, node_mac, online, firewall_rules),
@@ -123,8 +122,10 @@ try:
 
 except OSError as msg:
     router.close()
+    node2.close()
     print(msg)
-    router = None
-if router is None:
+    arp_table_socket["router"] = None
+    arp_table_socket["node2_ip"] = None
+if router or node2 is None:
     print("could not open socket")
     sys.exit(1)
