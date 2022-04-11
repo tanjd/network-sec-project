@@ -36,7 +36,7 @@ def choose_protocol():
     [1] Ping sender [protocol 0]
     [2] Send message for recipient to log [protocol 1]
     [3] Disconnect recipient [protocol 2]
-    [4] IP Spoofing [For Node 1]
+    [4] IP Spoofing [For Node 2]
     [5] Start/Stop Sniffing Attack [For Node 2]
     [6] Configure Firewall
     [7] Open Cat [TBC]
@@ -345,7 +345,7 @@ def log_sniffed_packet(received_packet):
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s :: %(message)s",
-        filename="network_logs.log",
+        filename="sniffing.log",
     )
 
     logging.info(
