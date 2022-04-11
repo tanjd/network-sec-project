@@ -41,7 +41,7 @@ def start_listening(socket_conn):
                 node_indexes.remove(node_indexes[0])
                 break
 
-    print(arp_table_socket)
+    # print(arp_table_socket)
     handle_clients(node_ip, arp_table_socket, False)
 
 
@@ -68,14 +68,13 @@ try:
         if ip_address == "router":
             ROUTER = connect_to_router()
             arp_table_socket_client["router"] = ROUTER
-            # print(ROUTER)
         if ip_address != node_ip and ip_address != "router":
             NODE = connect_to_node(node_ip, ip_address)
             if not NODE:
                 sys.exit(1)
             arp_table_socket_client[ip_address] = NODE
             print(f"[Connecting] {node_ip} is connected to {ip_address}")
-    print(arp_table_socket_client)
+    # print(arp_table_socket_client)
 
     time.sleep(1)
     online = True
