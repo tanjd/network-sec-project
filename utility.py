@@ -36,8 +36,8 @@ def choose_protocol():
     [1] Ping sender [protocol 0]
     [2] Send message for recipient to log [protocol 1]
     [3] Disconnect recipient [protocol 2]
-    [4] IP Spoofing [TBC]
-    [5] Sniffing Attack [TBC]
+    [4] IP Spoofing [For Node 1]
+    [5] Start/Stop Sniffing Attack [For Node 2]
     [6] Configure Firewall
     [7] Open Cat [TBC]
     """
@@ -54,7 +54,7 @@ def choose_protocol():
         else:
             protocol = int(response) - 1
             if protocol not in [0, 1, 2, 3, 4, 5]:
-                response = input("Invalid action. Please enter a number between 1-5: ")
+                response = input("Invalid action. Please enter a number between 1-6: ")
             else:
                 valid = True
     return protocol
@@ -217,22 +217,62 @@ def configure_firewall(firewall_rules):
     return firewall_rules
 
 
+sniffing_mode = None
+global_sniffing_ip = None
+global_sniffing_mac = None
+
+
+def set_sniffing_configuration(sniffing_ip, sniffing_mac):
+    global sniffing_mode
+    global global_sniffing_ip
+    global global_sniffing_mac
+
+    sniffing_mode = True
+    global_sniffing_ip = sniffing_ip
+    global_sniffing_mac = sniffing_mac
+
+
+def set_sniffing_to_off(original_ip, original_mac):
+    global sniffing_mode
+    global global_sniffing_ip
+    global global_sniffing_mac
+
+    sniffing_mode = False
+    global_sniffing_ip = original_ip
+    global_sniffing_mac = original_mac
+
+
 def start_receiver(
     arp_table_socket, conn, node_ip, node_mac, online, firewall_rules=None
 ):
+    global sniffing_mode
+    global global_sniffing_ip
+    global global_sniffing_mac
     print(f"[Receiving] {node_ip}-{node_mac} is receiving from {conn}")
     connected = True
 
     while connected:
+
         received_packet = retrieve_packet(conn)
+        if sniffing_mode:
+            print("Sniffing mode activated")
+            node_ip = global_sniffing_ip
+            node_mac = global_sniffing_mac
+        elif sniffing_mode == False:
+            print("Sniffing mode deactivated")
+            node_ip = global_sniffing_ip
+            node_mac = global_sniffing_mac
+
         if received_packet is False:
             print(f"{node_ip} disconnected")
             connected = False
             conn.close()
             break
 
-        if received_packet and received_packet.print_packet_integrity_status(
-            node_mac, node_ip
+        if (
+            received_packet
+            and not sniffing_mode
+            and received_packet.print_packet_integrity_status(node_mac, node_ip)
         ):
             is_packet_valid = True
             if firewall_rules:
@@ -246,6 +286,12 @@ def start_receiver(
                 connected = manage_protocol(
                     arp_table_socket, received_packet, node_ip, node_mac, online
                 )
+        elif sniffing_mode:
+            if (
+                received_packet.source_ip.hex() == node_ip
+                and received_packet.source_mac.decode("utf-8") == node_mac
+            ) or received_packet.print_packet_integrity_status(node_mac, node_ip):
+                log_sniffed_packet(received_packet)
         else:
             print("[Checking] Packet Dropped")
 
@@ -291,4 +337,22 @@ def manage_protocol(arp_table_socket, received_packet, node_ip, node_mac, online
         return False
     else:
         print(f"\n[PING] ... REPLY FROM {received_packet.source_ip.hex()} RECEIVED ")
+
         return True
+
+
+def log_sniffed_packet(received_packet):
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s :: %(message)s",
+        filename="network_logs.log",
+    )
+
+    logging.info(
+        received_packet.source_ip.hex()
+        + " - "
+        + received_packet.destination_ip.hex()
+        + " - "
+        + received_packet.payload.decode("utf-8")
+    )
+    print("\n[SNIFF PACKET] packet is logged.")
