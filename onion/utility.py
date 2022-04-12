@@ -237,7 +237,7 @@ def handle_client(my_ip, ip, conn, is_router):
                 if is_router:
                     print("Received", repr(data))
                 else:
-                    print(f"\n[BROADCAST RECEIVED] {len(data[2:])} bytes:", data)
+                    print(f"\n[BROADCAST RECEIVED]:", data)
 
                     unpadded_data = unpadding(data, PADDING)
                     src_ip = unpadded_data[0:2].decode("utf-8")

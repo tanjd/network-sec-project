@@ -19,7 +19,7 @@ def start_listening(socket_conn):
                 node_index += 1
                 break
 
-    print(arp_table_socket)
+    # print(arp_table_socket)
     handle_clients(None, arp_table_socket, True)
 
 
