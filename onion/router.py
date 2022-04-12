@@ -20,7 +20,7 @@ def start_listening(socket_conn):
                 break
 
     print(arp_table_socket)
-    handle_clients(arp_table_socket, True)
+    handle_clients(None, arp_table_socket, True)
 
 
 try:
@@ -43,7 +43,7 @@ try:
     online = True
     while online:
         answer = input("\nDo you want to terminate router? ")
-        if answer == "y":
+        if answer == "q":
             online = False
             ROUTER_SOCKET.close()
             print("Terminating router")
