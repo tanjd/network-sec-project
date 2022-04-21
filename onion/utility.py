@@ -40,7 +40,7 @@ node5_mac = "N5"
 
 ROUTER_SOCKET = (HOST, R1_PORT)
 
-arp_table_mac = {
+table_mac = {
     node1_ip: node1_mac,
     node2_ip: node2_mac,
     node3_ip: node3_mac,
@@ -49,7 +49,7 @@ arp_table_mac = {
 }
 
 
-arp_table_socket = {
+table_socket = {
     "router": None,
     node1_ip: None,
     node2_ip: None,
@@ -58,7 +58,7 @@ arp_table_socket = {
     node5_ip: None,
 }
 
-arp_table_socket_client = {
+table_socket_client = {
     "router": None,
     node1_ip: None,
     node2_ip: None,
@@ -120,12 +120,12 @@ def connect_to_node(node_ip, ip_address):
     return NODE
 
 
-def broadcast_data(arp_table_socket_client, packet, node_ip):
+def broadcast_data(table_socket_client, packet, node_ip):
     is_success = True
 
-    # arp_table_socket_client.pop(node_ip)
-    for client in arp_table_socket_client:
-        socket_conn = arp_table_socket_client[client]
+    # table_socket_client.pop(node_ip)
+    for client in table_socket_client:
+        socket_conn = table_socket_client[client]
         if client != node_ip:
             send_data(socket_conn, packet)
             if not send_data:
@@ -181,7 +181,8 @@ def prepare_onion_packet(path, message, dest):
         key_file = open("keys/{node}.bin".format(node=node_ip), "rb").read()
         key = key_file[0:16]
         iv = key_file[16:]
-        print("\nEncrypting with {n} key ...".format(n=node_ip))
+        print("\nCurrent message", message)
+        print("Encrypting with {n} key ...".format(n=node_ip))
         cipher = AES.new(key, AES.MODE_CBC, iv)
 
         encrypted_message = cipher.encrypt(pad(message, AES.block_size))
@@ -218,8 +219,8 @@ def decrypt(data, node):  # data does NOT include next hop addr
 
 
 #LISTENING SOCKETS
-def handle_clients(node_ip, arp_table_socket, is_router):
-    for ip, client_socket in arp_table_socket.items():
+def handle_clients(node_ip, table_socket, is_router):
+    for ip, client_socket in table_socket.items():
         thread = threading.Thread(
             target=handle_client, args=(node_ip, ip, client_socket, is_router)
         )
@@ -276,7 +277,7 @@ def handle_client(my_ip, ip, conn, is_router):
                                 len(decrypted_data),
                             )
                             print(
-                                "\n[ONION ETHERNET] Sending packet to:\t{dest}".format(
+                                "\n[ONION ETHERNET] Packet Destination:\t{dest}".format(
                                     dest=next_dest
                                 ),
                             )
@@ -286,7 +287,7 @@ def handle_client(my_ip, ip, conn, is_router):
                                 ),
                             )
                             broadcast_data(
-                                arp_table_socket_client, packet_to_send, my_ip
+                                table_socket_client, packet_to_send, my_ip
                             )
                     else: #Drop
                         print("[DROPPED] Packet dropped")
