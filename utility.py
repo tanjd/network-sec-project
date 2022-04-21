@@ -38,7 +38,6 @@ def choose_protocol():
     [4] IP Spoofing [For Node 2]
     [5] Start/Stop Sniffing Attack [For Node 2]
     [6] Configure Firewall
-    [7] Open Cat [TBC]
     """
     print(actions)
     response = input("Enter number (1,2,3,4,5,6) of the action you'd like to take: ")
