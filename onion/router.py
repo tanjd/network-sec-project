@@ -2,25 +2,25 @@ import socket
 import sys
 import time
 import threading
-from utility import HOST, R1_PORT, arp_table_socket, handle_clients
+from utility import HOST, R1_PORT, table_socket, handle_clients
 
 
 def start_listening(socket_conn):
     print(f"listening on {socket_conn.getsockname()}\n")
     socket_conn.listen(1)
     node_index = 1
-    while None in arp_table_socket.values():
+    while None in table_socket.values():
         conn, addr = socket_conn.accept()
 
-        for ip_address, client_socket in arp_table_socket.items():
+        for ip_address, client_socket in table_socket.items():
             if client_socket is None:
-                arp_table_socket[ip_address] = conn
+                table_socket[ip_address] = conn
                 print(f"Node {node_index} is online")
                 node_index += 1
                 break
 
-    # print(arp_table_socket)
-    handle_clients(None, arp_table_socket, True)
+    # print(table_socket)
+    handle_clients(None, table_socket, True)
 
 
 try:
@@ -30,7 +30,7 @@ except OSError as msg:
     print(msg)
 try:
     ROUTER_SOCKET.bind((HOST, R1_PORT))
-    arp_table_socket.pop("router", None)
+    table_socket.pop("router", None)
 
     print("[LISTENING]")
 
