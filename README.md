@@ -14,10 +14,10 @@ Topology 1:
 <li>Set up
 
 <ol>
-<li>Run router.py</li>
-<li>Run node1.py</li>
-<li>Run node2.py</li>
-<li>Run node3.py</li>
+<li>Python router.py</li>
+<li>Python node1.py</li>
+<li>Python node2.py</li>
+<li>Python node3.py</li>
 </ol>
 </ul>
 </li>
@@ -30,13 +30,13 @@ Topology 2 - "Onion Ethernet":
 Set up
 <ol>
 <li>pip install -r requirements.txt</li>
-<li>cd to onion folder</li>
-<li>Run router.py</li>
-<li>Run node1.py</li>
-<li>Run node2.py</li>
-<li>Run node3.py</li>
-<li>Run node4.py</li>
-<li>Run node5.py</li>
+<li>cd onion</li>
+<li>Python router.py</li>
+<li>Python node1.py</li>
+<li>Python node2.py</li>
+<li>Python node3.py</li>
+<li>Python node4.py</li>
+<li>Python node5.py</li>
 </ol>
 </li>
 </ul>
