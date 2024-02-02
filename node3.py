@@ -1,17 +1,11 @@
 import socket
 import sys
-import time
-from utility import (
-    broadcast_data,
-    print_node_information,
-    choose_protocol,
-    start_receiver,
-    configure_firewall,
-)
 import threading
+import time
 from ctypes import c_int
 from multiprocessing import Value
 
+from utility import broadcast_data, choose_protocol, configure_firewall, print_node_information, start_receiver
 
 node_ip = "3a"
 node_mac = "N3"

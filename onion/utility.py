@@ -1,19 +1,20 @@
+import copy
+import random
 import socket
 import sys
-import time
 import threading
-import random
-import copy
+import time
+from os import urandom
+from pathlib import Path
+
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
-from pathlib import Path
-from os import urandom
 
 HOST = "localhost"
 
 MAX_PACKET_LENGTH = 256
-PADDING = b'/'
+PADDING = b"/"
 
 R1_PORT = 50000
 router1_mac = "R1"
@@ -75,7 +76,8 @@ ip_address_port_dict = {
     node5_ip: N5_PORT,
 }
 
-#SOCKET CONNECTIONS
+
+# SOCKET CONNECTIONS
 def connect_to_router():
     try:
         ROUTER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -103,7 +105,7 @@ def connect_to_node(node_ip, ip_address):
         time.sleep(3)
         try:
             NODE = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except OSError as msg: 
+        except OSError as msg:
             NODE = None
             print(msg)
         try:
@@ -141,7 +143,8 @@ def send_data(socket_conn, packet):
     except ConnectionError:
         return False
 
-#ONION 'ETHERNET'
+
+# ONION 'ETHERNET'
 def generate_onion_path(src, dest):
     ip_dict = copy.deepcopy(ip_address_port_dict)
     ip_dict.pop(src)
@@ -158,7 +161,7 @@ def generate_keys(path):
         iv = get_random_bytes(16)
         public_dir = Path("keys")
         public_dir.mkdir(exist_ok=True)
-        file_out = open("keys/{node}.bin".format(node=node), "wb")
+        file_out = open(f"keys/{node}.bin", "wb")
         file_out.write(key + iv)
         file_out.close()
     return
@@ -169,7 +172,7 @@ def padding(payload, MAX_PACKET_LENGTH, PADDING):
 
 
 def unpadding(payload, PADDING):
-    index = payload.index(PADDING+PADDING)
+    index = payload.index(PADDING + PADDING)
     unpadded_payload = payload[0:index]
     return unpadded_payload
 
@@ -178,17 +181,15 @@ def prepare_onion_packet(path, message, dest):
     message = bytes(dest + message, "utf-8")
     for n in range(len(path) - 1, -1, -1):
         node_ip = path[n]
-        key_file = open("keys/{node}.bin".format(node=node_ip), "rb").read()
+        key_file = open(f"keys/{node_ip}.bin", "rb").read()
         key = key_file[0:16]
         iv = key_file[16:]
         print("\nCurrent message", message)
-        print("Encrypting with {n} key ...".format(n=node_ip))
+        print(f"Encrypting with {node_ip} key ...")
         cipher = AES.new(key, AES.MODE_CBC, iv)
 
         encrypted_message = cipher.encrypt(pad(message, AES.block_size))
-        print(
-            "encrypted message", encrypted_message, " length ", len(encrypted_message)
-        )
+        print("encrypted message", encrypted_message, " length ", len(encrypted_message))
         dest_addr = path[n]
         message = bytes(dest_addr, "utf-8") + encrypted_message
     encrypted_packet = padding(message, MAX_PACKET_LENGTH, PADDING)
@@ -209,7 +210,7 @@ def get_ip_address(node_index):
 
 
 def decrypt(data, node):  # data does NOT include next hop addr
-    key_file = open("keys/{node}.bin".format(node=node), "rb").read()
+    key_file = open(f"keys/{node}.bin", "rb").read()
     key = key_file[0:16]
     iv = key_file[16:]
     cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -218,12 +219,10 @@ def decrypt(data, node):  # data does NOT include next hop addr
     return (unpadded_packet[0:2], unpadded_packet[2:])  # Returns (Next Addr, Msg)
 
 
-#LISTENING SOCKETS
+# LISTENING SOCKETS
 def handle_clients(node_ip, table_socket, is_router):
     for ip, client_socket in table_socket.items():
-        thread = threading.Thread(
-            target=handle_client, args=(node_ip, ip, client_socket, is_router)
-        )
+        thread = threading.Thread(target=handle_client, args=(node_ip, ip, client_socket, is_router))
         thread.start()
 
 
@@ -262,12 +261,10 @@ def handle_client(my_ip, ip, conn, is_router):
                             plaintext = decrypted_data.decode("utf-8")
                             if plaintext:
                                 print(
-                                    "\n", "*"*40, "\n[ONION ETHERNET] Received message: {msg}".format(
-                                        msg=plaintext
-                                    )
+                                    "\n", "*" * 40, "\n[ONION ETHERNET] Received message: {msg}".format(msg=plaintext)
                                 )
 
-                        else: #Packet Decryption and forwarding
+                        else:  # Packet Decryption and forwarding
                             packet_header = bytes(my_ip + next_dest, "utf-8")
                             packet_to_send = padding(packet_header + decrypted_data, MAX_PACKET_LENGTH, PADDING)
 
@@ -277,19 +274,13 @@ def handle_client(my_ip, ip, conn, is_router):
                                 len(decrypted_data),
                             )
                             print(
-                                "\n[ONION ETHERNET] Packet Destination:\t{dest}".format(
-                                    dest=next_dest
-                                ),
+                                "\n[ONION ETHERNET] Packet Destination:\t{dest}".format(dest=next_dest),
                             )
                             print(
-                                "\n[ONION ETHERNET] Sending packet:\t {packet}".format(
-                                    packet=packet_to_send
-                                ),
+                                "\n[ONION ETHERNET] Sending packet:\t {packet}".format(packet=packet_to_send),
                             )
-                            broadcast_data(
-                                table_socket_client, packet_to_send, my_ip
-                            )
-                    else: #Drop
+                            broadcast_data(table_socket_client, packet_to_send, my_ip)
+                    else:  # Drop
                         print("[DROPPED] Packet dropped")
 
         except ConnectionError:

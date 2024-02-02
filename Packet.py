@@ -21,17 +21,9 @@ class Packet:
             self.payload = received_packet[9:]
 
     def create_packet_header(self):
-        ethernet_header = (
-            self.source_mac + self.destination_mac + self.ethernet_data_length
-        )
+        ethernet_header = self.source_mac + self.destination_mac + self.ethernet_data_length
         ip_header = self.source_ip + self.destination_ip
-        return (
-            ethernet_header
-            + ip_header
-            + self.protocol
-            + self.ip_data_length
-            + self.payload
-        )
+        return ethernet_header + ip_header + self.protocol + self.ip_data_length + self.payload
 
     def print_packet_information(self):
         print("\n********************************\n")
@@ -47,9 +39,7 @@ class Packet:
             "\nPayload:                 {payload}".format(
                 source_mac=self.source_mac.decode("utf-8"),
                 destination_mac=self.destination_mac.decode("utf-8"),
-                ethernet_data_length=int.from_bytes(
-                    self.ethernet_data_length, byteorder="big"
-                ),
+                ethernet_data_length=int.from_bytes(self.ethernet_data_length, byteorder="big"),
                 source_ip=self.source_ip.hex(),
                 destination_ip=self.destination_ip.hex(),
                 protocol=int.from_bytes(self.protocol, byteorder="big"),
@@ -65,15 +55,8 @@ class Packet:
     def print_packet_integrity_status(self, node_mac, node_ip):
         mac_check = bytes(node_mac, "utf-8") == self.destination_mac
         ip_check = bytes.fromhex(node_ip) == self.destination_ip
-        print(
-            "\nPacket integrity:"
-            "\nDestination MAC address matches own MAC address: {mac}".format(
-                mac=mac_check
-            )
-        )
-        print(
-            "\nDestination IP address matches own IP address: {ip}".format(ip=ip_check)
-        )
+        print("\nPacket integrity:" "\nDestination MAC address matches own MAC address: {mac}".format(mac=mac_check))
+        print(f"\nDestination IP address matches own IP address: {ip_check}")
 
         if mac_check and ip_check:
             return True

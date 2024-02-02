@@ -1,7 +1,8 @@
 import socket
 import sys
-import time
 import threading
+import time
+
 from utility import retrieve_packet
 
 
@@ -41,9 +42,7 @@ def handle_client(ip, conn):
                             packet_header = received_packet.create_packet_header()
                             sending_conn.sendall(packet_header)
                         except ConnectionError:
-                            print(
-                                f"\n {received_packet.destination_ip.hex()} is not online."
-                            )
+                            print(f"\n {received_packet.destination_ip.hex()} is not online.")
                             print(sending_conn)
                             sending_conn.close()
         except:
@@ -75,8 +74,7 @@ def start_listening(router):
             print("Node 1 is online")
 
     while (
-        arp_table_socket[router2_mac][node2_ip] is None
-        or arp_table_socket[router2_mac][node3_ip] is None
+        arp_table_socket[router2_mac][node2_ip] is None or arp_table_socket[router2_mac][node3_ip] is None
     ) and socket_port == R2_PORT:
         conn, addr = router.accept()
 
@@ -175,4 +173,3 @@ except OSError as msg:
 if router1 is None or router2 is None:
     print("could not open socket")
     sys.exit(1)
- 

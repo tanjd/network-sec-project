@@ -1,4 +1,5 @@
 import logging
+
 from Packet import Packet
 
 
@@ -27,7 +28,6 @@ def choose_recipient():
 
 
 def choose_protocol():
-
     actions = """\n**************************************
 
     ACTIONS:
@@ -46,9 +46,7 @@ def choose_protocol():
     while not valid:
         if response == "":
             print(actions)
-            response = input(
-                "Enter number (1,2,3,4,5,6) of the action you'd like to take: "
-            )
+            response = input("Enter number (1,2,3,4,5,6) of the action you'd like to take: ")
         else:
             protocol = int(response) - 1
             if protocol not in [0, 1, 2, 3, 4, 5]:
@@ -79,9 +77,7 @@ def broadcast_data(
         )
 
 
-def send_data(
-    node, source_ip, destination_ip, source_mac, destination_mac, protocol, payload
-):
+def send_data(node, source_ip, destination_ip, source_mac, destination_mac, protocol, payload):
     ip_data_length = len(payload)
 
     # Max Length of IP Payload: 251 (\xfb)
@@ -142,9 +138,7 @@ def display_firewall_rules(firewall_rules):
     entry = 1
     for allow_or_deny, ip_addesses in firewall_rules.items():
         for ip_address in ip_addesses:
-            print(
-                f"\t{entry}\t{ip_address}\t\t{'ALLOW' if allow_or_deny == 'A' else 'DENY'}"
-            )
+            print(f"\t{entry}\t{ip_address}\t\t{'ALLOW' if allow_or_deny == 'A' else 'DENY'}")
             entry += 1
 
 
@@ -153,9 +147,7 @@ def remove_firewall_rule_by_entry(entry, firewall_rules):
     for allow_or_deny, ip_addesses in firewall_rules.items():
         for ip_address in ip_addesses:
             if int(entry) == index:
-                firewall_rules = remove_firewall_rule(
-                    allow_or_deny, ip_address, firewall_rules
-                )
+                firewall_rules = remove_firewall_rule(allow_or_deny, ip_address, firewall_rules)
                 return firewall_rules
             index += 1
     return firewall_rules
@@ -163,10 +155,7 @@ def remove_firewall_rule_by_entry(entry, firewall_rules):
 
 def add_firewall_rule(allow_or_deny, ip_address, firewall_rules):
     allow_or_deny = allow_or_deny.upper()
-    if (
-        ip_address.upper() in firewall_rules[allow_or_deny]
-        or ip_address.lower() in firewall_rules[allow_or_deny]
-    ):
+    if ip_address.upper() in firewall_rules[allow_or_deny] or ip_address.lower() in firewall_rules[allow_or_deny]:
         return firewall_rules
 
     if ip_address.upper() == "ALL":
@@ -199,9 +188,7 @@ def configure_firewall(firewall_rules):
         if action == "1":
             ip_address = input("Enter Source IP Address: ")
             allow_or_deny = input(f"Allow [A] or Deny [D] {ip_address} ?")
-            firewall_rules = add_firewall_rule(
-                allow_or_deny, ip_address, firewall_rules
-            )
+            firewall_rules = add_firewall_rule(allow_or_deny, ip_address, firewall_rules)
         else:
             entry = input("Enter entry to remove: ")
             firewall_rules = remove_firewall_rule_by_entry(entry, firewall_rules)
@@ -240,9 +227,7 @@ def set_sniffing_to_off(original_ip, original_mac):
     global_sniffing_mac = original_mac
 
 
-def start_receiver(
-    arp_table_socket, conn, node_ip, node_mac, online, firewall_rules=None
-):
+def start_receiver(arp_table_socket, conn, node_ip, node_mac, online, firewall_rules=None):
     global sniffing_mode
     global global_sniffing_ip
     global global_sniffing_mac
@@ -266,27 +251,18 @@ def start_receiver(
             node_ip = global_sniffing_ip
             node_mac = global_sniffing_mac
 
-        if (
-            received_packet
-            and not sniffing_mode
-            and received_packet.print_packet_integrity_status(node_mac, node_ip)
-        ):
+        if received_packet and not sniffing_mode and received_packet.print_packet_integrity_status(node_mac, node_ip):
             is_packet_valid = True
             if firewall_rules:
                 print(f"\n[Checking] firewall rules {firewall_rules}")
 
                 is_packet_valid = received_packet.check_validity(firewall_rules)
-                print(
-                    f"\n[Checking] Packet is {'allowed' if is_packet_valid else 'denied'}"
-                )
+                print(f"\n[Checking] Packet is {'allowed' if is_packet_valid else 'denied'}")
             if is_packet_valid:
-                connected = manage_protocol(
-                    arp_table_socket, received_packet, node_ip, node_mac, online
-                )
+                connected = manage_protocol(arp_table_socket, received_packet, node_ip, node_mac, online)
         elif sniffing_mode:
             if (
-                received_packet.source_ip.hex() == node_ip
-                and received_packet.source_mac.decode("utf-8") == node_mac
+                received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac
             ) or received_packet.print_packet_integrity_status(node_mac, node_ip):
                 log_sniffed_packet(received_packet)
         else:

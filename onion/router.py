@@ -1,8 +1,9 @@
 import socket
 import sys
-import time
 import threading
-from utility import HOST, R1_PORT, table_socket, handle_clients
+import time
+
+from utility import HOST, R1_PORT, handle_clients, table_socket
 
 
 def start_listening(socket_conn):
@@ -34,9 +35,7 @@ try:
 
     print("[LISTENING]")
 
-    thread = threading.Thread(
-        target=start_listening, args=(ROUTER_SOCKET,), daemon=True
-    )
+    thread = threading.Thread(target=start_listening, args=(ROUTER_SOCKET,), daemon=True)
     thread.start()
 
     time.sleep(1)

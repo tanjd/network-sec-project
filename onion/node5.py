@@ -1,21 +1,22 @@
 import socket
 import sys
-import time
 import threading
+import time
+
 from utility import (
     HOST,
     broadcast_data,
-    connect_to_router,
-    table_socket,
-    handle_clients,
     connect_to_node,
-    get_ip_address,
-    table_mac,
-    ip_address_port_dict,
-    table_socket_client,
-    generate_onion_path,
+    connect_to_router,
     generate_keys,
-    prepare_onion_packet
+    generate_onion_path,
+    get_ip_address,
+    handle_clients,
+    ip_address_port_dict,
+    prepare_onion_packet,
+    table_mac,
+    table_socket,
+    table_socket_client,
 )
 
 node_index = 5
@@ -25,6 +26,7 @@ PORT = ip_address_port_dict[node_ip]
 NODE_SOCKET = None
 
 ROUTER = None
+
 
 def start_listening(socket_conn):
     print(f"listening on {socket_conn.getsockname()}\n")
@@ -76,12 +78,13 @@ try:
     time.sleep(1)
     online = True
 
-    #console user interface
+    # console user interface
     while online:
         print(f"\n\t\tEnter 'q' anytime to terminate node {node_index} ")
-        answer = input("""\n
+        answer = input(
+            """\n
                     ********************
-                    
+
                     CLIENTS:
 
                     1a
@@ -92,24 +95,25 @@ try:
                     ********************
 
                     Choose a node to send to:
-                    """)
+                    """
+        )
 
-        if answer == "q": #terminate node
+        if answer == "q":  # terminate node
             online = False
             NODE_SOCKET.close()
             print(f"\nTerminating node {node_index}\n")
 
-        elif answer == "" or answer not in table_socket_client.keys(): #output handling
+        elif answer == "" or answer not in table_socket_client.keys():  # output handling
             print("\nInvalid option. Please try again")
 
         else:
             dest_ip = answer
             message = input("\n Enter a message: ")
 
-            if message == "": #output handling
+            if message == "":  # output handling
                 print("\nPlease try again")
 
-            else: #Set up onion path, keys and broadcast packet
+            else:  # Set up onion path, keys and broadcast packet
                 time.sleep(0.5)
                 print("\n Creating random path of onion nodes...")
                 path = generate_onion_path(node_ip, dest_ip)
@@ -132,7 +136,7 @@ try:
                 encrypted_packet = prepare_onion_packet(path, message, dest_ip)
                 print("\nEncrypted_packet\t", encrypted_packet)
                 print("\nPacket length\t", len(encrypted_packet))
-                
+
                 next_node = path[0]
                 packet_to_send = bytes(node_ip, "utf-8") + encrypted_packet
                 broadcast_data(table_socket_client, packet_to_send, node_ip)

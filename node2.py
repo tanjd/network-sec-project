@@ -1,20 +1,21 @@
 import socket
 import sys
-import time
-from utility import (
-    broadcast_data,
-    manage_protocol,
-    print_node_information,
-    choose_protocol,
-    retrieve_packet,
-    start_receiver,
-    set_sniffing_configuration,
-    log_sniffed_packet,
-    set_sniffing_to_off,
-)
 import threading
+import time
 from ctypes import c_int
 from multiprocessing import Value
+
+from utility import (
+    broadcast_data,
+    choose_protocol,
+    log_sniffed_packet,
+    manage_protocol,
+    print_node_information,
+    retrieve_packet,
+    set_sniffing_configuration,
+    set_sniffing_to_off,
+    start_receiver,
+)
 
 
 def handle_client(ip, conn):
@@ -39,18 +40,11 @@ def handle_client(ip, conn):
             node_ip = sniffing_ip
             node_mac = sniffing_mac
 
-        if (
-            received_packet
-            and not sniffing_mode
-            and received_packet.print_packet_integrity_status(node_mac, node_ip)
-        ):
-            connected = manage_protocol(
-                arp_table_socket, received_packet, node_ip, node_mac, online
-            )
+        if received_packet and not sniffing_mode and received_packet.print_packet_integrity_status(node_mac, node_ip):
+            connected = manage_protocol(arp_table_socket, received_packet, node_ip, node_mac, online)
         elif sniffing_mode:
             if (
-                received_packet.source_ip.hex() == node_ip
-                and received_packet.source_mac.decode("utf-8") == node_mac
+                received_packet.source_ip.hex() == node_ip and received_packet.source_mac.decode("utf-8") == node_mac
             ) or received_packet.print_packet_integrity_status(node_mac, node_ip):
                 log_sniffed_packet(received_packet)
         else:
@@ -68,9 +62,7 @@ def start_listening(node_server):
             arp_table_socket[node3_ip] = conn
             print("Node 3 is online")
 
-    thread = threading.Thread(
-        target=handle_client, args=(node3_ip, arp_table_socket[node3_ip])
-    )
+    thread = threading.Thread(target=handle_client, args=(node3_ip, arp_table_socket[node3_ip]))
     thread.start()
 
 
@@ -129,9 +121,7 @@ try:
     arp_table_socket["router"] = node
 
     print("[LISTENING]")
-    listening_thread = threading.Thread(
-        target=start_listening, args=(node_server,), daemon=True
-    )
+    listening_thread = threading.Thread(target=start_listening, args=(node_server,), daemon=True)
     listening_thread.start()
 
     print("[Connecting] Node 2 is connected to router")

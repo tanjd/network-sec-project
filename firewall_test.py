@@ -43,12 +43,7 @@ test_count = 0
 def test_firewall(firewall_rules, expected):
     global test_count
     test_count = test_count + 1
-    print(
-        "Test "
-        + str(test_count)
-        + ": "
-        + str(packet.check_validity(firewall_rules) is expected)
-    )
+    print("Test " + str(test_count) + ": " + str(packet.check_validity(firewall_rules) is expected))
 
 
 print("\n")
@@ -92,9 +87,7 @@ def test_add_rule(firewall_rules, allow_or_deny, ip_address, expected):
     global test_count2
     test_count2 = test_count2 + 1
     firewall_rules = add_firewall_rule(allow_or_deny, ip_address, firewall_rules)
-    print(
-        f'Test add rule {test_count2}: { "True" if firewall_rules == expected else "False"}'
-    )
+    print(f'Test add rule {test_count2}: { "True" if firewall_rules == expected else "False"}')
 
 
 firewall_rules = {"A": [], "D": []}
@@ -139,9 +132,7 @@ def test_remove_rule(firewall_rules, allow_or_deny, ip_address, expected):
     test_count3 = test_count3 + 1
     firewall_rules = remove_firewall_rule(allow_or_deny, ip_address, firewall_rules)
 
-    print(
-        f'Test remove rule {test_count3}: { "True" if firewall_rules == expected else "False"}'
-    )
+    print(f'Test remove rule {test_count3}: { "True" if firewall_rules == expected else "False"}')
 
 
 firewall_rules = {"A": ["ALL", "1a"], "D": []}

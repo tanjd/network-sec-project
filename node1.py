@@ -1,11 +1,11 @@
 import socket
 import sys
-import time
-from utility import print_node_information, choose_protocol, send_data, start_receiver
 import threading
+import time
 from ctypes import c_int
 from multiprocessing import Value
 
+from utility import choose_protocol, print_node_information, send_data, start_receiver
 
 node_ip = "1a"
 node_mac = "N1"
@@ -61,9 +61,7 @@ try:
             ip_addr = input("\n Enter IP Address to ping: ")
 
             try:
-                send_data(
-                    node, sender_ip, ip_addr, node_mac, destination_mac, protocol, data
-                )
+                send_data(node, sender_ip, ip_addr, node_mac, destination_mac, protocol, data)
             except ConnectionError:
                 online.value = False
         else:
