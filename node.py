@@ -13,6 +13,7 @@ class Node:
         self.server_thread = threading.Thread(target=self.connect_to_router)
         node_log_file = f"{mac}.log"
         self.logger = Logger("node", node_log_file)
+        self.sock: socket.socket
 
     def connect_to_router(self):
         try:

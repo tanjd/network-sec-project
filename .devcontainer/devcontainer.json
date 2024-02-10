@@ -1,7 +1,7 @@
 {
   "name": "network-sec-project",
   "image": "mcr.microsoft.com/devcontainers/base:bullseye",
-  "postCreateCommand": "poetry config virtualenvs.in-project true; sudo apt-get update; sudo apt-get install libpq-dev -y; poetry install; poetry run pre-commit install; echo '****** postCreateCommand completed *****'",
+  "postCreateCommand": "poetry config virtualenvs.in-project true; sudo apt-get update; sudo apt-get install libpq-dev -y; echo '****** postCreateCommand completed *****'",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -41,7 +41,8 @@
         "ms-python.black-formatter",
         "mikestead.dotenv",
         "tamasfe.even-better-toml",
-        "ms-pyright.pyright"
+        "ms-pyright.pyright",
+        "ms-vscode.makefile-tools"
       ],
       "settings": {
         "editor.formatOnSave": true,

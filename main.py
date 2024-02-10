@@ -2,7 +2,7 @@ import os
 import time
 
 from node import Node
-from router import Router
+from router import DISCONNECT_MESSAGE, Router
 
 
 def remove_log_files():
@@ -22,15 +22,19 @@ if __name__ == "__main__":
     router = Router("R1", "1B", HOST, PORT)
     router.start()
 
-    node = Node("N1", "1A", HOST, PORT)
-    node.start()
+    node1 = Node("N1", "1A", HOST, PORT)
+    node1.start()
+
+    # node2 = Node("N2", "2A", HOST, PORT)
+    # node2.start()
 
     try:
         time.sleep(2.5)
-        node.send("hello server")
+        node1.send("hello server")
         router.send("1A", "Hello client")
+        node1.send(DISCONNECT_MESSAGE)
     finally:
         if router.sock:
             router.sock.close()
-        if node.sock:
-            node.sock.close()
+        if node1.sock:
+            node1.sock.close()

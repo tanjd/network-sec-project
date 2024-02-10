@@ -1,5 +1,3 @@
-import os
-
 from dotenv import load_dotenv
 
 
@@ -12,7 +10,7 @@ class NodeConfig:
             router_name = "R1"
         else:
             router_name = "R2"
-
+        print(router_name)
         # # Define your environment variables here
         # self.name: str = name
         # self.node_ip: str = os.getenv(f"{name}_NODE_IP")

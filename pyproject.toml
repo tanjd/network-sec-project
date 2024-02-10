@@ -46,7 +46,8 @@ init-hook = 'import sys; sys.path.append("./")'
 # (W0511) todo/fixme
 # (W1203) % lazy formatting in logging
 # (W0105) multiline comment
-disable = "R,C,W0511,W1203,W0603,W0105,W0621,W0622,E0213"
+# (W0718) Catching too general exception Exception (broad-exception-caught)
+disable = "R,C,W0511,W1203,W0603,W0105,W0621,W0622,E0213,W0718"
 extension-pkg-whitelist = "pydantic"
 extension-pkg-allow-list = "ujson"
 
