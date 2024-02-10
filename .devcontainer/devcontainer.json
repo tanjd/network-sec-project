@@ -40,7 +40,8 @@
         "esbenp.prettier-vscode",
         "ms-python.black-formatter",
         "mikestead.dotenv",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "ms-pyright.pyright"
       ],
       "settings": {
         "editor.formatOnSave": true,

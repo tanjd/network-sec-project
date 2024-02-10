@@ -260,9 +260,7 @@ def handle_client(my_ip, ip, conn, is_router):
                         if next_dest == my_ip:  # Receiving Node decrypts plaintext msg
                             plaintext = decrypted_data.decode("utf-8")
                             if plaintext:
-                                print(
-                                    "\n", "*" * 40, "\n[ONION ETHERNET] Received message: {msg}".format(msg=plaintext)
-                                )
+                                print("\n", "*" * 40, f"\n[ONION ETHERNET] Received message: {plaintext}")
 
                         else:  # Packet Decryption and forwarding
                             packet_header = bytes(my_ip + next_dest, "utf-8")
@@ -274,10 +272,10 @@ def handle_client(my_ip, ip, conn, is_router):
                                 len(decrypted_data),
                             )
                             print(
-                                "\n[ONION ETHERNET] Packet Destination:\t{dest}".format(dest=next_dest),
+                                f"\n[ONION ETHERNET] Packet Destination:\t{next_dest}",
                             )
                             print(
-                                "\n[ONION ETHERNET] Sending packet:\t {packet}".format(packet=packet_to_send),
+                                f"\n[ONION ETHERNET] Sending packet:\t {packet_to_send}",
                             )
                             broadcast_data(table_socket_client, packet_to_send, my_ip)
                     else:  # Drop
