@@ -1,6 +1,6 @@
 import logging
 
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter("%(asctime)s - %(name)s -  %(levelname)s - %(message)s")
 
 
 class Logger(logging.Logger):
