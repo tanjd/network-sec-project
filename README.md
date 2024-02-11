@@ -21,3 +21,9 @@ At its current stage, the project features the establishment of a server and cli
 4. Run `make` to access make commands
 
 This set-up ensures that you have the necessary tools for development within this repository.
+
+## TODO
+
+1. Simulate Packet Structure
+2. Client to Client message
+3. Add some CI pipeline
